@@ -160,8 +160,8 @@ for (size_t i=0; i<points.size() ; i++)
       iter_cloud[2] = rgbd.point.z;
       ++iter_cloud;
 }
-
-
+ publisher_.publish(cloud);
+return true;
 
 }
 }

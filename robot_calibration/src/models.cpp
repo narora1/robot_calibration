@@ -150,6 +150,7 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
     if (data.observations[obs].sensor_name == name_)
     {
       sensor_idx = obs;
+      std::cout<<"name : "<< name_ <<std::endl;
       break;
     }
   }

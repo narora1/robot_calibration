@@ -98,11 +98,13 @@ int Optimizer::optimize(OptimizationParams& params,
       Camera3dModel* model = new Camera3dModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"]);
       models_[params.models[i].name] = model;
     }
-    else
+    else 
     {
       // ERROR unknown
     }
   }
+
+  std::cout<<"data :"<<  data[1].observations[0].features[0].point.z << std::endl ;
 
   // Setup  parameters to calibrate
   offsets_ = new CalibrationOffsetParser();
@@ -126,8 +128,11 @@ int Optimizer::optimize(OptimizationParams& params,
   for (int i = 0; i < offsets_->size(); ++i)
     free_params_[i] = 0.0;
 
+  double z_ = 0;
   // Houston, we have a problem...
   problem_ = new ceres::Problem();
+for (int i=0 ;i< params.error_blocks.size(); ++i)
+   std::cout << "*****"<<params.error_blocks[i].type <<std::endl;
 
   // For each sample of data:
   for (size_t i = 0; i < data.size(); ++i)
@@ -140,6 +145,8 @@ int Optimizer::optimize(OptimizationParams& params,
         // CheckboardFinder, or any other finder that can sample the pose
         // of one or more data points that are connected at a constant offset
         // from a link a kinematic chain (the "arm").
+        continue ;
+        /*
         std::string camera_name = static_cast<std::string>(params.error_blocks[j].params["camera"]);
         std::string arm_name = static_cast<std::string>(params.error_blocks[j].params["arm"]);
 
@@ -171,11 +178,49 @@ int Optimizer::optimize(OptimizationParams& params,
             std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 2)];
           std::cout << std::endl << std::endl;
         }
+       */
+        //problem_->AddResidualBlock(cost,
+       //                            NULL /* squared loss */,
+          //                         free_params_);
+      }
+      else if (params.error_blocks[j].type =="camera3d_to_ground")
+      {
+	std::cout<<" I AM HERE" <<std::endl;
+        std::string camera_name = static_cast<std::string>(params.error_blocks[j].params["camera"]);
+        //std::string arm_name = static_cast<std::string>(params.error_blocks[j].params["arm"]);
+
+        // Check that this sample has the required features/observations
+        //if (!hasSensor(data[i], camera_name) || !hasSensor(data[i], arm_name))
+          //continue;
+        std::cout<<"next"<< std::endl;
+        // Create the block
+        ceres::CostFunction * cost = GroundPlaneError::Create(
+          dynamic_cast<Camera3dModel*>(models_[camera_name]),
+          z_,
+          offsets_, data[i]);
+        std::cout<<"verbose in opti"<<progress_to_stdout << std::endl;
+
+         if (progress_to_stdout)
+        {
+          double ** params = new double*[1];
+          params[0] = free_params_;
+          double * residuals = new double[data[i].observations[0].features.size() ];  // TODO: should check that all features are same length?
+
+          cost->Evaluate(params, residuals, NULL);
+
+          std::cout << std::endl << "  z: ";
+          for (size_t k = 0; k < data[i].observations[0].features.size(); ++k)
+            std::cout << "  " << std::setw(10) << std::fixed << residuals[(k)];
+          std::cout << std::endl << std::endl;
+        }
 
         problem_->AddResidualBlock(cost,
                                    NULL /* squared loss */,
                                    free_params_);
+
+
       }
+
       else if (params.error_blocks[j].type == "outrageous")
       {
         // Outrageous error block requires no particular sensors, add to every sample

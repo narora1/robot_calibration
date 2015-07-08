@@ -31,19 +31,19 @@ namespace robot_calibration
 struct GroundPlaneError
 {
 
-GroundPlaneError(Camera3dModel* camera_model, 
-                CalibrationOffsetParser* offsets,
-                robot_calibration_msgs::CalibrationData& data, double z)
-{
-  camera_model_ = camera_model;
-  z_ = z;
-  offsets_ = offsets;
-  data_ = data;
-}
+  GroundPlaneError(Camera3dModel* camera_model, 
+                   CalibrationOffsetParser* offsets,
+                   robot_calibration_msgs::CalibrationData& data, double z)
+  {
+    camera_model_ = camera_model;
+    z_ = z;
+    offsets_ = offsets;
+    data_ = data;
+  }
 
-virtual ~GroundPlaneError() {}
+  virtual ~GroundPlaneError() {}
 
-bool operator()(double const * const * free_params,
+  bool operator()(double const * const * free_params,
                   double* residuals) const
   {
     // Update calibration offsets based on free params
@@ -53,18 +53,8 @@ bool operator()(double const * const * free_params,
     std::vector<geometry_msgs::PointStamped> camera_pts =
         camera_model_->project(data_, *offsets_);
    
-    for (int i=0; i<camera_pts.size() ; i++) 
-    {
-    //std::cout<< "cam point x : " << camera_pts[i].point.x<< std::endl ;
-    //std::cout<< "cam point y : " << camera_pts[i].point.y<< std::endl ;
-    //std::cout<< "cam point z : " << camera_pts[i].point.z<< std::endl ;
-    std::cout<< "data x : " << data_.observations[0].features[i].point.x<< std::endl;
-    std::cout<< "data y : " << data_.observations[0].features[i].point.y<< std::endl;
-    std::cout<< "data z : " << data_.observations[0].features[i].point.z<< std::endl;
-    
-}
-
     double z=0;
+     
     // Compute residuals
     for (size_t i = 0; i < camera_pts.size() ; ++i)
     {
@@ -74,13 +64,14 @@ bool operator()(double const * const * free_params,
     return true;  
   }
 
-static ceres::CostFunction* Create(Camera3dModel* camera_model,
+  static ceres::CostFunction* Create(Camera3dModel* camera_model,
                                      double z ,
                                      CalibrationOffsetParser* offsets,
                                      robot_calibration_msgs::CalibrationData& data)
   {
     ceres::DynamicNumericDiffCostFunction<GroundPlaneError> * func;
-    func = new ceres::DynamicNumericDiffCostFunction<GroundPlaneError>( new GroundPlaneError(camera_model, offsets, data, z));
+    func = new ceres::DynamicNumericDiffCostFunction<GroundPlaneError>( 
+                    new GroundPlaneError(camera_model, offsets, data, z));
     func->AddParameterBlock(offsets->size());
     func->SetNumResiduals(data.observations[0].features.size());
 

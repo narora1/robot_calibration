@@ -18,6 +18,12 @@ GroundPlaneFinder::GroundPlaneFinder(ros::NodeHandle & nh) :
                             this);
 
   publisher_ = nh.advertise<sensor_msgs::PointCloud2>("ground_plane_points", 10);
+  if (!depth_camera_manager_.init(nh))
+ {
+    // Error will be printed in manager
+    throw;
+ }
+
 }
 
 void GroundPlaneFinder::cameraCallback(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud)
@@ -60,8 +66,6 @@ bool GroundPlaneFinder::find(robot_calibration_msgs::CalibrationData * msg)
   geometry_msgs::PointStamped rgbd;
   geometry_msgs::PointStamped world;
 
- //pcl::PointCloud<pcl::PointXYZRGB>::Ptr prev_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-//pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud
  
 if(!waitForCloud())
   {
@@ -69,9 +73,7 @@ if(!waitForCloud())
     return false;
   }
 
- //prev_cloud->height ;
-
- int points_total = 20;
+ int points_total = 80;
  
  /*
 
@@ -81,8 +83,8 @@ int points_x = 5;
  size_t step_x = cloud_ptr_->width/points_x;
  size_t step_y = cloud_ptr_->height/points_y;
 */
-std::cout<<"width"<<cloud_ptr_->width<<std::endl;
-std::cout<<"height"<<cloud_ptr_->height<<std::endl; 
+//std::cout<<"width"<<cloud_ptr_->width<<std::endl;
+//std::cout<<"height"<<cloud_ptr_->height<<std::endl; 
   std::vector<cv::Point2f> points;
   //points.resize(points_x * points_y);
   points.resize(1 * points_total);
@@ -108,7 +110,7 @@ std::cout<<"height"<<cloud_ptr_->height<<std::endl;
     msg->observations[0].sensor_name = "camera";  
     //msg->observations[0].features.resize(points_x * points_y);
     msg->observations[0].features.resize(1 * points_total);
-    msg->observations[1].sensor_name = "arm";     
+    msg->observations[1].sensor_name = "ground";     
     //msg->observations[1].features.resize(points_x * points_y);
     msg->observations[1].features.resize(1 * points_total);
 
@@ -179,9 +181,9 @@ for (size_t i=0; i<points.size() ; i++)
       rgbd.point.x = cloud_ptr_->points[index].x;
       rgbd.point.y = cloud_ptr_->points[index].y;
       rgbd.point.z = cloud_ptr_->points[index].z;
-      std::cout<<"x: "<<rgbd.point.x<<std::endl;
-      std::cout<<"y: "<<rgbd.point.y<<std::endl;
-      std::cout<<"z: "<<rgbd.point.z<<std::endl;
+      //std::cout<<"x: "<<rgbd.point.x<<std::endl;
+      //std::cout<<"y: "<<rgbd.point.y<<std::endl;
+      //std::cout<<"z: "<<rgbd.point.z<<std::endl;
       
      /* if (isnan(rgbd.point.x) ||
           isnan(rgbd.point.y) ||
@@ -196,6 +198,7 @@ for (size_t i=0; i<points.size() ; i++)
      
 
       msg->observations[0].features[i] = rgbd;
+      msg->observations[0].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
       msg->observations[1].features[i] = world;
 
       iter_cloud[0] = rgbd.point.x;

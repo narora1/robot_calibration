@@ -104,7 +104,7 @@ int Optimizer::optimize(OptimizationParams& params,
     }
   }
 
-  std::cout<<"data :"<<  data[1].observations[0].features[0].point.z << std::endl ;
+  //std::cout<<"data :"<<  data[1].observations[0].features[0].point.z << std::endl ;
 
   // Setup  parameters to calibrate
   offsets_ = new CalibrationOffsetParser();
@@ -131,8 +131,8 @@ int Optimizer::optimize(OptimizationParams& params,
   double z_ = 0;
   // Houston, we have a problem...
   problem_ = new ceres::Problem();
-for (int i=0 ;i< params.error_blocks.size(); ++i)
-   std::cout << "*****"<<params.error_blocks[i].type <<std::endl;
+///for (int i=0 ;i< params.error_blocks.size(); ++i)
+   ///std::cout << "*****"<<params.error_blocks[i].type <<std::endl;
 
   // For each sample of data:
   for (size_t i = 0; i < data.size(); ++i)
@@ -145,8 +145,8 @@ for (int i=0 ;i< params.error_blocks.size(); ++i)
         // CheckboardFinder, or any other finder that can sample the pose
         // of one or more data points that are connected at a constant offset
         // from a link a kinematic chain (the "arm").
-        continue ;
-        /*
+
+        
         std::string camera_name = static_cast<std::string>(params.error_blocks[j].params["camera"]);
         std::string arm_name = static_cast<std::string>(params.error_blocks[j].params["arm"]);
 
@@ -178,27 +178,27 @@ for (int i=0 ;i< params.error_blocks.size(); ++i)
             std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 2)];
           std::cout << std::endl << std::endl;
         }
-       */
-        //problem_->AddResidualBlock(cost,
-       //                            NULL /* squared loss */,
-          //                         free_params_);
+      
+        problem_->AddResidualBlock(cost,
+                                   NULL /* squared loss */,
+                                   free_params_);
       }
       else if (params.error_blocks[j].type =="camera3d_to_ground")
       {
-	std::cout<<" I AM HERE" <<std::endl;
+
         std::string camera_name = static_cast<std::string>(params.error_blocks[j].params["camera"]);
-        //std::string arm_name = static_cast<std::string>(params.error_blocks[j].params["arm"]);
+        std::string ground_name = static_cast<std::string>(params.error_blocks[j].params["ground"]);
 
         // Check that this sample has the required features/observations
-        //if (!hasSensor(data[i], camera_name) || !hasSensor(data[i], arm_name))
-          //continue;
-        std::cout<<"next"<< std::endl;
+        if (!hasSensor(data[i], camera_name) || !hasSensor(data[i], ground_name))
+          continue;
+ 
         // Create the block
         ceres::CostFunction * cost = GroundPlaneError::Create(
           dynamic_cast<Camera3dModel*>(models_[camera_name]),
           z_,
           offsets_, data[i]);
-        std::cout<<"verbose in opti"<<progress_to_stdout << std::endl;
+       // std::cout<<"verbose in opti"<<progress_to_stdout << std::endl;
 
          if (progress_to_stdout)
         {

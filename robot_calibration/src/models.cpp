@@ -150,7 +150,7 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
     if (data.observations[obs].sensor_name == name_)
     {
       sensor_idx = obs;
-      std::cout<<"name : "<< name_ <<std::endl;
+      //std::cout<<"name : "<< name_ <<std::endl;
       break;
     }
   }
@@ -169,6 +169,11 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
   double camera_fy = data.observations[sensor_idx].ext_camera_info.camera_info.P[CAMERA_INFO_P_FY_INDEX];
   double camera_cx = data.observations[sensor_idx].ext_camera_info.camera_info.P[CAMERA_INFO_P_CX_INDEX];
   double camera_cy = data.observations[sensor_idx].ext_camera_info.camera_info.P[CAMERA_INFO_P_CY_INDEX];
+  double camera_distort_1 = data.observations[sensor_idx].ext_camera_info.camera_info.D[CAMERA_INFO_D_1];  
+  double camera_distort_2 = data.observations[sensor_idx].ext_camera_info.camera_info.D[CAMERA_INFO_D_2];
+  double camera_distort_3 = data.observations[sensor_idx].ext_camera_info.camera_info.D[CAMERA_INFO_D_3];
+  double camera_distort_4 = data.observations[sensor_idx].ext_camera_info.camera_info.D[CAMERA_INFO_D_4];
+  double camera_distort_5 = data.observations[sensor_idx].ext_camera_info.camera_info.D[CAMERA_INFO_D_5];
 
   /*
    * z_scale and z_offset defined in openni2_camera/src/openni2_driver.cpp
@@ -196,6 +201,13 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
   double new_camera_cy = camera_cy * (1.0 + offsets.get(name_+"_cy"));
   double new_z_offset = offsets.get(name_+"_z_offset");
   double new_z_scaling = 1.0 + offsets.get(name_+"_z_scaling");
+  double new_camera_distort_1 = camera_distort_1 + (offsets.get(name_+"_distort_1")); 
+  double new_camera_distort_2 = camera_distort_2 + (offsets.get(name_+"_distort_2"));
+  double new_camera_distort_3 = camera_distort_3 + (offsets.get(name_+"_distort_3"));
+  double new_camera_distort_4 = camera_distort_4 + (offsets.get(name_+"_distort_4"));
+  double new_camera_distort_5 = camera_distort_5 + (offsets.get(name_+"_distort_5"));
+
+
 
   points.resize(data.observations[sensor_idx].features.size());
 
@@ -210,24 +222,64 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
     double z = data.observations[sensor_idx].features[i].point.z;
 
     // Unproject through parameters stored at runtime
-    double u = x * camera_fx / z + camera_cx;
-    double v = y * camera_fy / z + camera_cy;
+
+    double x_ = x/z;
+    double y_ = y/z;
+    double r2 = pow(x_,2) + pow(y_,2) ;
+    x_ = x_ * (1 + camera_distort_1 * r2 + camera_distort_2*pow(r2,2) + camera_distort_5 * pow(r2,3))
+                 + 2 * camera_distort_3 * x_ * y_ + camera_distort_4 * ( r2 + 2 * x_ * x_ );
+    y_ = y_ * (1 + camera_distort_1 * r2 + camera_distort_2*pow(r2,2) + camera_distort_5 * pow(r2,3))
+                 + 2 * camera_distort_4 * x_ * y_ + camera_distort_3 * ( r2 + 2 * y_ * y_ );
+    
+
+    double u = x_ * camera_fx + camera_cx;
+    double v = y_ * camera_fy + camera_cy;
     double depth = z/z_scaling - z_offset;
 
     KDL::Frame pt(KDL::Frame::Identity());
 
     // Reproject through new calibrated parameters
     pt.p.z((depth + new_z_offset) * new_z_scaling);
-    pt.p.x((u - new_camera_cx) * pt.p.z() / new_camera_fx);
-    pt.p.y((v - new_camera_cy) * pt.p.z() / new_camera_fy);
+    // pt.p.x(new_x' * pt.p.z());
+    //pt.p.y(new_y' * pt.p.z());
 
-    // Project through fk
-    pt = fk * pt;
+    //pt.p.x((u - new_camera_cx) * pt.p.z() / new_camera_fx);
+    //pt.p.y((v - new_camera_cy) * pt.p.z() / new_camera_fy);
+   
+     x_ = (u - new_camera_cx)/new_camera_fx ;
+     y_ = ( v - new_camera_cy ) /new_camera_fy ;
+ 
+     u = x_;
+     v = y_;
+ 
+     int iters = 1 ;
+     for( int j = 0; j < iters; j++ )
+     {
+       /*r2 = x_*x_ + y_*y_;
+       double icdist = 1/ (1 + new_camera_distort_1 * r2 + new_camera_distort_2*pow(r2,2) + new_camera_distort_5 * pow(r2,3)) ;
+       double deltaX = 2 * new_camera_distort_3 * x_ * y_ + new_camera_distort_4 * ( r2 + 2 * x_ * x_ );
+       double deltaY = 2 * new_camera_distort_4 * x_ * y_ + new_camera_distort_3 * ( r2 + 2 * y_ * y_ );
+       x_ = (x_ - deltaX)*icdist;
+       y_ = (y_ - deltaY)*icdist;*/
 
-    points[i].point.x = pt.p.x();
-    points[i].point.y = pt.p.y();
-    points[i].point.z = pt.p.z();
-    points[i].header.frame_id = root_;
+       r2 = u*u +v*v ;
+       double icdist = 1/ (1 + new_camera_distort_1 * r2 + new_camera_distort_2*pow(r2,2) + new_camera_distort_5 * pow(r2,3)) ;
+       double deltaX = 2 * new_camera_distort_3 * u *v +new_camera_distort_4 * ( r2 + 2 * u*u );
+       double deltaY = 2 * new_camera_distort_4 * u* v+ new_camera_distort_3 * ( r2 + 2 * v* v);
+       u= (x_ - deltaX)*icdist;
+       v= (y_ - deltaY)*icdist;
+     } 
+   
+     pt.p.x(u*pt.p.z());
+     pt.p.y(v*pt.p.y());  
+
+     // Project through fk
+     pt = fk * pt;
+   
+     points[i].point.x = pt.p.x();
+     points[i].point.y = pt.p.y();
+     points[i].point.z = pt.p.z();
+     points[i].header.frame_id = root_;
   }
 
   return points;

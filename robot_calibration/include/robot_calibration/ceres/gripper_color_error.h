@@ -74,6 +74,8 @@ struct GripperColorError
     // Project the camera observations
     std::vector<geometry_msgs::PointStamped> camera_pts =
          camera_model_->project_(data_,arm_pts, *offsets_);
+//    std::cout << "color" << std::endl;
+//    std::cout <<  data_.observations[0].features.size() <<std::endl;
 
     // Compute residuals
     for (size_t i = 0; i < camera_pts.size(); ++i)
@@ -101,11 +103,22 @@ struct GripperColorError
                                      CalibrationOffsetParser* offsets,
                                      robot_calibration_msgs::CalibrationData& data)
   {
+    int index = -1;
+      for (size_t k =0; k < data.observations.size() ; k++)
+      {
+       //std::cout << data.observations.size() << std::endl;
+        if ( data.observations[k].sensor_name == "camerargb")//camera_name)
+        {
+          index = k;
+          break;
+        }
+      }
+
     ceres::DynamicNumericDiffCostFunction<GripperColorError> * func;
     func = new ceres::DynamicNumericDiffCostFunction<GripperColorError>(
                     new GripperColorError(camera_model, arm_model, offsets, data));
     func->AddParameterBlock(offsets->size());
-    func->SetNumResiduals(data.observations[0].features.size() * 2);
+    func->SetNumResiduals(data.observations[index].features.size() * 2);
 
     return static_cast<ceres::CostFunction*>(func);
   }

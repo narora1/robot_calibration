@@ -159,12 +159,24 @@ struct GripperDepthError
                                      ChainModel* arm_model,
                                      CalibrationOffsetParser* offsets,
                                      robot_calibration_msgs::CalibrationData& data)
-  {
+  {  
+    int index = -1;
+      for (size_t k =0; k < data.observations.size() ; k++)
+      {      
+       //std::cout << data.observations.size() << std::endl;
+        if ( data.observations[k].sensor_name == "cameradepth")//camera_name)
+        {
+          index = k;
+          break;
+        }
+      }
+         
+
     ceres::DynamicNumericDiffCostFunction<GripperDepthError> * func;
     func = new ceres::DynamicNumericDiffCostFunction<GripperDepthError>(
                     new GripperDepthError(camera_model, arm_model,offsets, data ));
     func->AddParameterBlock(offsets->size());
-    func->SetNumResiduals(data.observations[0].features.size()*3);
+    func->SetNumResiduals(data.observations[index].features.size()*3);
 
     return static_cast<ceres::CostFunction*>(func);
   }

@@ -36,7 +36,6 @@ GripperColorFinder::GripperColorFinder(ros::NodeHandle& nh) :
   client_->waitForServer();
 
   // Setup subscriber
-  //nh.param<std::string>("topic", topic_name, "/points");
   subscriber_ = nh.subscribe("/head_camera/rgb/image_raw",
       1,
       &GripperColorFinder::cameraCallback,
@@ -125,7 +124,6 @@ void GripperColorFinder::cameraCallback(const sensor_msgs::ImageConstPtr& image)
   if (waiting_)
   {
     image_ = *image;
-    //std::cout << image_ << std::endl;
     waiting_ = false;
   }
 }
@@ -231,7 +229,7 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
     double u = 574.052 * world_pt.point.x/world_pt.point.z + 319.5;
     double v = 574.052 * world_pt.point.y/world_pt.point.z + 239.5;
-//    std::cout << u << "\t" << v << std::endl;
+
     led.point.x = u;
     led.point.y = v;
     led.point.z = 0;
@@ -242,13 +240,13 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
       ROS_ERROR("Failed to find features before using maximum iterations.");
       return false;
     }
-    
+
     prev_image = image_;
   }
   // Export results
-int idx_cam = -1;
-int idx_chain = -1;
-std::cout << "msg obs size" << "\t" << msg->observations.size() << std::endl;
+  int idx_cam = -1;
+  int idx_chain = -1;
+
   if(msg->observations.size() == 0)
   {
     msg->observations.resize(2);
@@ -264,16 +262,14 @@ std::cout << "msg obs size" << "\t" << msg->observations.size() << std::endl;
     {
       if(msg->observations[i].sensor_name == camera_sensor_name_)
       {
-         idx_cam = i;
-         idx_chain = i+1;
+        idx_cam = i;
+        idx_chain = i+1;
         break;
       }
     }
     if( idx_cam == -1 )
     {
       msg->observations.resize(prev_size + 2);
-      //msg->observations[0].sensor_name = camera_sensor_name_;
-      //msg->observations[1].sensor_name = chain_sensor_name_;
       msg->observations[prev_size+0].sensor_name = camera_sensor_name_;
       msg->observations[prev_size+1].sensor_name = chain_sensor_name_;
       idx_cam = prev_size + 0;
@@ -281,28 +277,23 @@ std::cout << "msg obs size" << "\t" << msg->observations.size() << std::endl;
 
     } 
   }
- // msg->observations.resize(prev_size + 2);
- // msg->observations[0].sensor_name = camera_sensor_name_;
- // msg->observations[1].sensor_name = chain_sensor_name_;
 
   for (size_t t = 0; t < trackers_.size(); ++t)
   {
     geometry_msgs::PointStamped rgbd_pt;
     geometry_msgs::PointStamped world_pt;
     geometry_msgs::PointStamped world_point;
-//std::cout << "t" << t << std::endl;
-    // rgbd_pt.x  = trackers_[t];
+
     if (!trackers_[t].getRefinedCentroid(image_, rgbd_pt))
     {
       ROS_ERROR_STREAM("No centroid for feature " << t);
       return false;
     }
-  
+
     geometry_msgs::PointStamped led;
     led.point = trackers_[t].point_;
     led.header.frame_id = "wrist_roll_link";//trackers_[tracker].frame_;
 
-  //  geometry_msgs::PointStamped world_pt;
     tf::TransformListener listener;
     ros::Time time_;
     time_ = ros::Time(0);
@@ -321,28 +312,22 @@ std::cout << "msg obs size" << "\t" << msg->observations.size() << std::endl;
     double u = 574.052 * world_pt.point.x/world_pt.point.z + 319.5;
     double v = 574.052 * world_pt.point.y/world_pt.point.z + 239.5;
 
-//std::cout << "u" << u << "rgbd_pt.point.x" << rgbd_pt.point.x << std::endl;
     float distance_x = sqrt((rgbd_pt.point.x - v) * (rgbd_pt.point.x - v));
     float distance_y = sqrt((rgbd_pt.point.y - u) * (rgbd_pt.point.y - u));
     if (distance_x > 30 || distance_y > 30)
     {  
       ROS_ERROR_STREAM("Feature was too far away from expected pose in"  << distance_x << "\t" << distance_y);
       return false;
-   }
+    }
 
     msg->observations[idx_cam].features.push_back(rgbd_pt);
     msg->observations[idx_cam].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
-//    msg->observations[0].sensor_name.push_back("camerargb");
+
     world_point.point = trackers_[t].point_;
     world_point.header.frame_id = "wrist_roll_link";
 
     msg->observations[idx_chain].features.push_back(world_point);
     msg->observations[idx_chain].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
-//    msg->observations[1].sensor_name.push_back("arm");
-    std::cout << "u" << (rgbd_pt.point.y - u) << std::endl;
-    std::cout << "v" << (rgbd_pt.point.x - v) << std::endl;
-    //std::cout << rgbd_pt.point.x << std::endl;
-    //std::cout << rgbd_pt.point.y << std::endl;
 
   } 
   return true;
@@ -395,7 +380,7 @@ bool GripperColorFinder::CloudDifferenceTracker::process(
   // We want to compare each point to the expected LED pose,
   // but when the LED is on, the points will be NAN,
   // fall back on most recent distance for these points
- 
+
   cv_bridge::CvImagePtr cv_ptr;
   cv_bridge::CvImagePtr cv_ptr_prev;
   try
@@ -454,7 +439,7 @@ bool GripperColorFinder::CloudDifferenceTracker::process(
       {
         max_ = diff_[i];
         max_idx_ = i;
- //       std::cout << "max" << max_ << std::endl;
+        //       std::cout << "max" << max_ << std::endl;
       }
     }}
   return true;
@@ -519,4 +504,5 @@ bool GripperColorFinder::CloudDifferenceTracker::isFound(
 
   return true;
 }
+
 } 

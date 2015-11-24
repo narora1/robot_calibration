@@ -205,8 +205,8 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project_(
 
     if (data.observations[sensor_idx].features[i].header.frame_id != tip_)
     {
-      std::cout << "tip" << tip_ << std::endl;
-      std::cout << data.observations[sensor_idx].features[i].header.frame_id << std::endl;
+//      std::cout << "tip" << tip_ << std::endl;
+//      std::cout << data.observations[sensor_idx].features[i].header.frame_id << std::endl;
       KDL::Frame p2(KDL::Frame::Identity());
       if (offsets.getFrame(data.observations[sensor_idx].features[i].header.frame_id, p2))
       {

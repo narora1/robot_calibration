@@ -500,7 +500,7 @@ int idx_chain = -1;
     rgbd_pt.header.frame_id = "/wrist_roll_link"; 
 
  //   std::cout << points_on_plane.at<cv::Vec3f>(i,0)[0] << std::endl;
-    msg->observations[1].features.push_back(rgbd_pt);
+    msg->observations[idx_chain].features.push_back(rgbd_pt);
 //    msg->observations[1].sensor_name.push_back("arm");
 
   //  std::cout << rgbd_pt.point.x << "\t" << rgbd_pt.point.y << "\t" << rgbd_pt.point.z << std::endl;

@@ -170,21 +170,31 @@ int Optimizer::optimize(OptimizationParams& params,
             models_[arm_name],
             offsets_.get(), data[i]);
 
+        int index = -1;
+        for (size_t k =0; k < data[i].observations.size() ; k++)
+        {
+            if ( data[i].observations[k].sensor_name == camera_name)
+            {
+             index = k;
+             break;
+            }
+        }
+
         if (progress_to_stdout)
         {
           double ** params = new double*[1];
           params[0] = free_params;
-          double * residuals = new double[data[i].observations[0].features.size() * 3];  // TODO: should check that all features are same length?
+          double * residuals = new double[data[i].observations[index].features.size() * 3];  // TODO: should check that all features are same length?
 
           cost->Evaluate(params, residuals, NULL);
           std::cout << "INITIAL COST (" << i << ")" << std::endl << "  x: ";
-          for (size_t k = 0; k < data[i].observations[0].features.size(); ++k)
+          for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
             std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 0)];
           std::cout << std::endl << "  y: ";
-          for (size_t k = 0; k < data[i].observations[0].features.size(); ++k)
+          for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
             std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 1)];
           std::cout << std::endl << "  z: ";
-          for (size_t k = 0; k < data[i].observations[0].features.size(); ++k)
+          for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
             std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 2)];
           std::cout << std::endl << std::endl;
         }
@@ -208,16 +218,26 @@ int Optimizer::optimize(OptimizationParams& params,
             z_,
             offsets_.get(), data[i]);
 
+        int index = -1;
+        for (size_t k =0; k < data[i].observations.size() ; k++)
+        {
+            if ( data[i].observations[k].sensor_name == camera_name)
+            {
+             index = k;
+             break;
+            }
+        }
+        
         if (progress_to_stdout)
         {
           double ** params = new double*[1];
           params[0] = free_params;
-          double * residuals = new double[data[i].observations[0].features.size()];
+          double * residuals = new double[data[i].observations[index].features.size()];
 
           cost->Evaluate(params, residuals, NULL);
 
           std::cout << std::endl << "  z: ";
-          for (size_t k = 0; k < data[i].observations[0].features.size(); ++k)
+          for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
             std::cout << "  " << std::setw(10) << std::fixed << residuals[(k)];
           std::cout << std::endl << std::endl;
         }
@@ -230,40 +250,47 @@ int Optimizer::optimize(OptimizationParams& params,
       {
         std::string camera_name = static_cast<std::string>(params.error_blocks[j].params["camera"]);
         std::string gripper_name = static_cast<std::string>(params.error_blocks[j].params["gripper"]);
-          std::cout << camera_name << std::endl;
-          std::cout << gripper_name <<std::endl;
-        //  std::cout <<"before error block" << std::endl;
+
         // Check that this sample has the required features/observations
         if (!hasSensor(data[i], camera_name) || !hasSensor(data[i], gripper_name))
-        { std::cout << "buzz" << std::endl;
-          std::cout <<data[i].observations[0].sensor_name << std::endl;
-          std::cout <<  data[i].observations[1].sensor_name << std::endl;
+        { 
           continue;
-        }//std::cout << "error block" << std::endl;
+        }
+
         // Create the block
         ceres::CostFunction * cost = GripperDepthError::Create(
             dynamic_cast<Camera3dModel*>(models_[camera_name]),
             models_[gripper_name],
             offsets_.get(), data[i]);
 
+        int index = -1;
+        for (size_t k = 0; k < data[i].observations.size() ; k++)
+        {
+            if ( data[i].observations[k].sensor_name == camera_name)
+            {
+             index = k;
+             break;
+            }
+        }
+
         if (progress_to_stdout)
         {
           double ** params = new double*[1];
           params[0] = free_params;
-          double * residuals = new double[data[i].observations[0].features.size() * 3];  // TODO: should check that all features are same length?
-          // std::cout << data[i].observations[1].features.size() << std::endl;
+          double * residuals = new double[data[i].observations[index].features.size() * 3];  // TODO: should check that all features are same length?
+          
           cost->Evaluate(params, residuals, NULL);
-          /*          std::cout << "INITIAL COST (" << i << ")" << std::endl << "  x: ";
-                      for (size_t k = 0; k < data[i].observations[0].features.size(); ++k)
+                      std::cout << "INITIAL COST (" << i << ")" << std::endl << "  x: ";
+                      for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
                       std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 0)];
                       std::cout << std::endl << "  y: ";
-                      for (size_t k = 0; k < data[i].observations[0].features.size(); ++k)
+                      for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
                       std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 1)];
                       std::cout << std::endl << "  z: ";
-                      for (size_t k = 0; k < data[i].observations[0].features.size(); ++k)
+                      for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
                       std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 2)];
                       std::cout << std::endl << std::endl;
-           */
+           
         }
 
         problem->AddResidualBlock(cost,
@@ -274,43 +301,48 @@ int Optimizer::optimize(OptimizationParams& params,
       {
         std::string camera_name = static_cast<std::string>(params.error_blocks[j].params["camera"]);
         std::string gripper_name = static_cast<std::string>(params.error_blocks[j].params["gripper"]);
-      //  std::cout << camera_name << std::endl;
-      //  std::cout << gripper_name <<std::endl;
-        //std::cout <<"before error block" << std::endl;
+
         // Check that this sample has the required features/observations
         if (!hasSensor(data[i], camera_name) || !hasSensor(data[i], gripper_name))
         {
-          std::cout << "buzz" << std::endl;
-          std::cout <<data[i].observations[0].sensor_name << std::endl;
-          std::cout <<  data[i].observations[1].sensor_name << std::endl;
           continue;
         }
-        //std::cout << "error block" << std::endl;
-        std::cout << "its ok" << std::endl;
+
         // Create the block
         ceres::CostFunction * cost = GripperColorError::Create(
             dynamic_cast<Camera2dModel*>(models_[camera_name]),
             models_[gripper_name],
             offsets_.get(), data[i]);
 
+        int index = -1;
+        for (size_t k =0; k < data[i].observations.size() ; k++)
+        {
+          if (data[i].observations[k].sensor_name == camera_name)
+            {
+             index = k;
+             break;
+            }
+
+        }
+
         if (progress_to_stdout)
         {
           double ** params = new double*[1];
           params[0] = free_params;
-          double * residuals = new double[data[i].observations[0].features.size() * 2];  // TODO: should check that all features are same length?
-          // std::cout << data[i].observations[1].features.size() << std::endl;
+          double * residuals = new double[data[i].observations[index].features.size() * 2];
+          
           cost->Evaluate(params, residuals, NULL);
-          /*          std::cout << "INITIAL COST (" << i << ")" << std::endl << "  x: ";
-                      for (size_t k = 0; k < data[i].observations[0].features.size(); ++k)
+                      std::cout << "INITIAL COST (" << i << ")" << std::endl << "  x: ";
+                      for (size_t k = 0; k < data[i].observations[index].fatures.size(); ++k)
                       std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 0)];
                       std::cout << std::endl << "  y: ";
-                      for (size_t k = 0; k < data[i].observations[0].features.size(); ++k)
+                      for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
                       std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 1)];
                       std::cout << std::endl << "  z: ";
-                      for (size_t k = 0; k < data[i].observations[0].features.size(); ++k)
+                      for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
                       std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 2)];
                       std::cout << std::endl << std::endl;
-           */
+           
         }
 
         problem->AddResidualBlock(cost,

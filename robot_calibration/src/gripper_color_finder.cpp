@@ -49,6 +49,10 @@ GripperColorFinder::GripperColorFinder(ros::NodeHandle& nh) :
   nh.param<double>("threshold", threshold_, 1000.0);
   nh.param<int>("max_iterations", max_iterations_, 50);
 
+  // Get sensor names
+  nh.param<std::string>("camera_sensor_name", camera_sensor_name_, "camerargb");
+  nh.param<std::string>("chain_sensor_name", chain_sensor_name_, "gripperrgb");
+
   // Parameters for LEDs themselves
   std::string gripper_led_frame;
   nh.param<std::string>("gripper_led_frame", gripper_led_frame, "wrist_roll_link");
@@ -242,9 +246,44 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
     prev_image = image_;
   }
   // Export results
-  msg->observations.resize(2);
-  msg->observations[0].sensor_name = "camerargb";//camera_sensor_name_;
-  msg->observations[1].sensor_name = "arm";//chain_sensor_name_;
+int idx_cam = -1;
+int idx_chain = -1;
+std::cout << "msg obs size" << "\t" << msg->observations.size() << std::endl;
+  if(msg->observations.size() == 0)
+  {
+    msg->observations.resize(2);
+    msg->observations[0].sensor_name = camera_sensor_name_;
+    msg->observations[1].sensor_name = chain_sensor_name_;
+    idx_cam = 0;
+    idx_chain = 1;
+    prev_size = 2;
+  }
+  else
+  {
+    for(size_t i=0; i< msg->observations.size(); i++)
+    {
+      if(msg->observations[i].sensor_name == camera_sensor_name_)
+      {
+         idx_cam = i;
+         idx_chain = i+1;
+        break;
+      }
+    }
+    if( idx_cam == -1 )
+    {
+      msg->observations.resize(prev_size + 2);
+      //msg->observations[0].sensor_name = camera_sensor_name_;
+      //msg->observations[1].sensor_name = chain_sensor_name_;
+      msg->observations[prev_size+0].sensor_name = camera_sensor_name_;
+      msg->observations[prev_size+1].sensor_name = chain_sensor_name_;
+      idx_cam = prev_size + 0;
+      idx_chain = prev_size + 1;
+
+    } 
+  }
+ // msg->observations.resize(prev_size + 2);
+ // msg->observations[0].sensor_name = camera_sensor_name_;
+ // msg->observations[1].sensor_name = chain_sensor_name_;
 
   for (size_t t = 0; t < trackers_.size(); ++t)
   {
@@ -291,15 +330,15 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
       return false;
    }
 
-    msg->observations[0].features.push_back(rgbd_pt);
-    msg->observations[0].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
-
+    msg->observations[idx_cam].features.push_back(rgbd_pt);
+    msg->observations[idx_cam].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
+//    msg->observations[0].sensor_name.push_back("camerargb");
     world_point.point = trackers_[t].point_;
     world_point.header.frame_id = "wrist_roll_link";
 
-    msg->observations[1].features.push_back(world_point);
-    msg->observations[1].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
-
+    msg->observations[idx_chain].features.push_back(world_point);
+    msg->observations[idx_chain].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
+//    msg->observations[1].sensor_name.push_back("arm");
     std::cout << "u" << (rgbd_pt.point.y - u) << std::endl;
     std::cout << "v" << (rgbd_pt.point.x - v) << std::endl;
     //std::cout << rgbd_pt.point.x << std::endl;

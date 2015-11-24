@@ -250,9 +250,46 @@ bool LedFinder::find(robot_calibration_msgs::CalibrationData * msg)
   sensor_msgs::PointCloud2Iterator<float> iter_cloud(cloud, "x");
 
   // Export results
-  msg->observations.resize(2);
-  msg->observations[0].sensor_name = camera_sensor_name_;
-  msg->observations[1].sensor_name = chain_sensor_name_;
+//  msg->observations.resize(2);
+//  msg->observations[0].sensor_name = camera_sensor_name_;
+//  msg->observations[1].sensor_name = chain_sensor_name_;
+//
+  int idx_cam = -1;
+int idx_chain = -1;
+
+  if(msg->observations.size() == 0)
+  {
+    msg->observations.resize(2);
+    msg->observations[0].sensor_name = camera_sensor_name_;
+    msg->observations[1].sensor_name = chain_sensor_name_;
+    idx_cam = 0;
+    idx_chain = 1;
+    prev_size = 2;
+  }
+  else
+  {
+    for(size_t i=0; i< msg->observations.size(); i++)
+    {
+      if(msg->observations[i].sensor_name == camera_sensor_name_)
+      {
+         idx_cam = i;
+         idx_chain = i+1;
+        break;
+      }
+    }
+    if( idx_cam == -1 )
+    {
+      msg->observations.resize(prev_size + 2);
+      //msg->observations[0].sensor_name = camera_sensor_name_;
+      //msg->observations[1].sensor_name = chain_sensor_name_;
+      msg->observations[prev_size+0].sensor_name = camera_sensor_name_;
+      msg->observations[prev_size+1].sensor_name = chain_sensor_name_;
+      idx_cam = prev_size + 0;
+      idx_chain = prev_size + 1;
+
+    }
+  }
+ 
   for (size_t t = 0; t < trackers_.size(); ++t)
   { 
     geometry_msgs::PointStamped rgbd_pt;
@@ -296,32 +333,57 @@ bool LedFinder::find(robot_calibration_msgs::CalibrationData * msg)
     }
 
     // Push back observation
-    msg->observations[0].features.push_back(rgbd_pt);
-    msg->observations[0].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
-
+    msg->observations[idx_cam].features.push_back(rgbd_pt);
+    msg->observations[idx_cam].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
+//    msg->observations[0].sensor_name.push_back(camera_sensor_name_);
     // Visualize
     iter_cloud[0] = rgbd_pt.point.x;
     iter_cloud[1] = rgbd_pt.point.y;
     iter_cloud[2] = rgbd_pt.point.z;
     ++iter_cloud;
 
+    double u = 574.052 * rgbd_pt.point.x/rgbd_pt.point.z + 319.5;
+    double v = 574.052 * rgbd_pt.point.y/rgbd_pt.point.z + 239.5;
+
+    
     // Push back expected location of point on robot
     world_pt.header.frame_id = trackers_[t].frame_;
     world_pt.point = trackers_[t].point_;
-    msg->observations[1].features.push_back(world_pt);
+    msg->observations[idx_chain].features.push_back(world_pt);
+//    msg->observations[1].sensor_name.push_back(chain_sensor_name_);
+
+    tf::TransformListener listener;
+    ros::Time time_;
+    time_ = ros::Time(0);
+
+    try
+    {
+      listener.waitForTransform("/wrist_roll_link","/head_camera_rgb_optical_frame" , time_, ros::Duration(3.0));
+      listener.transformPoint("/head_camera_rgb_optical_frame", time_, world_pt , "/wrist_roll_link", world_pt);
+    }
+    catch(const tf::TransformException &ex)
+    {
+      ROS_ERROR_STREAM("Failed to transform feature to " );//<< trackers_[t].frame_);
+      return false;
+    }
+
+    double u1= 574.052 * world_pt.point.x/world_pt.point.z + 319.5;
+    double v1 = 574.052 * world_pt.point.y/world_pt.point.z + 239.5;
+//    std::cout << "u" << u1-u << std::endl;
+//    std::cout << "v" << v1-v << std::endl;
   }
 
   // Final check that all points are valid
-  if (msg->observations[0].features.size() != trackers_.size())
+  if (msg->observations[idx_cam].features.size() != trackers_.size())
   {
     return false;
   }
 
   cv::Mat rgb_points;
   //std::cout << msg->observations[0].features.size() << std::endl;
-  for (size_t i = 0; i < msg->observations[0].features.size() - 1; i++)
+  for (size_t i = 0; i < msg->observations[idx_cam].features.size() - 1; i++)
   {
-    cv::Vec3f V(msg->observations[0].features[i].point.x, msg->observations[0].features[i].point.y, msg->observations[0].features[i].point.z);
+    cv::Vec3f V(msg->observations[idx_cam].features[i].point.x, msg->observations[idx_cam].features[i].point.y, msg->observations[idx_cam].features[i].point.z);
     rgb_points.push_back(V);
   }
 
@@ -337,7 +399,7 @@ bool LedFinder::find(robot_calibration_msgs::CalibrationData * msg)
   // Add debug cloud to message
   if (output_debug_)
   {
-    msg->observations[0].cloud = cloud_;
+    msg->observations[idx_cam].cloud = cloud_;
   }
 
   // Publish results
@@ -447,6 +509,7 @@ bool LedFinder::CloudDifferenceTracker::process(
     {
       max_ = diff_[i];
       max_idx_ = i;
+//      std::cout << max_ << std::endl;
     }
   }
 

@@ -45,7 +45,10 @@ GripperDepthFinder::GripperDepthFinder(ros::NodeHandle & nh) :
       1,
       &GripperDepthFinder::cameraCallback,
       this);
-
+ // Get sensor names
+ nh.param<std::string>("camera_sensor_name", camera_sensor_name_, "cameradepth");
+ nh.param<std::string>("chain_sensor_name", chain_sensor_name_, "gripperdepth");
+ //
   camera_info_sub_ = nh.subscribe<sensor_msgs::CameraInfo>(
       "/head_camera/depth/camera_info",
       10, &GripperDepthFinder::cameraInfoCallback, this);
@@ -441,12 +444,50 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
   //  std::cout << "***" <<camera_sensor_name_ << std::endl;
   //  std::cout << "***" <<chain_sensor_name_ << std::endl;
   // std::cout << "blah" << std::endl;
-  msg->observations.resize(2);
-  msg->observations[0].sensor_name = "cameradepth";//camera_sensor_name_;//"cameradepth";//camera_sensor_name_;
-  msg->observations[1].sensor_name = "arm";//chain_sensor_name_;//"arm";//chain_sensor_name_;
+  //msg->observations.resize(2);
+  //msg->observations[0].sensor_name = "cameradepth";//camera_sensor_name_;//"cameradepth";//camera_sensor_name_;
+  //msg->observations[1].sensor_name = "arm";//chain_sensor_name_;//"arm";//chain_sensor_name_;
   //  std::cout <<camera_sensor_name_ << std::endl;
   //  std::cout << chain_sensor_name_ << std::endl;
   // transform them to the base frame
+  
+int idx_cam = -1;
+int idx_chain = -1;
+
+  if(msg->observations.size() == 0)
+  {
+    msg->observations.resize(2);
+    msg->observations[0].sensor_name = camera_sensor_name_;
+    msg->observations[1].sensor_name = chain_sensor_name_;
+    idx_cam = 0;
+    idx_chain = 1;
+    prev_size = 2;
+  }
+  else
+  {
+    for(size_t i=0; i< msg->observations.size(); i++)
+    {
+      if(msg->observations[i].sensor_name == camera_sensor_name_)
+      {
+         idx_cam = i;
+         idx_chain = i+1;
+        break;
+      }
+    }
+    if( idx_cam == -1 )
+    {
+      msg->observations.resize(prev_size + 2);
+      //msg->observations[0].sensor_name = camera_sensor_name_;
+      //msg->observations[1].sensor_name = chain_sensor_name_;
+      std::cout << camera_sensor_name_ << "\t" << chain_sensor_name_ <<"\t" << prev_size << std::endl;
+      msg->observations[prev_size+0].sensor_name = camera_sensor_name_;
+      msg->observations[prev_size+1].sensor_name = chain_sensor_name_;
+      idx_cam = prev_size + 0;
+      idx_chain = prev_size + 1;
+
+    }
+  }
+ 
   cv::Mat points_on_plane_transformed;
   tf::StampedTransform transform;
 
@@ -460,6 +501,8 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
  //   std::cout << points_on_plane.at<cv::Vec3f>(i,0)[0] << std::endl;
     msg->observations[1].features.push_back(rgbd_pt);
+//    msg->observations[1].sensor_name.push_back("arm");
+
   //  std::cout << rgbd_pt.point.x << "\t" << rgbd_pt.point.y << "\t" << rgbd_pt.point.z << std::endl;
   }
 
@@ -602,8 +645,10 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
  //     }
  //     else
    //   {
-      msg->observations[0].features.push_back(rgbd_pt);
-    //      std::cout << rgbd_pt.point.x << "\t" << rgbd_pt.point.y << "\t" << rgbd_pt.point.z << std::endl;
+      msg->observations[idx_cam].features.push_back(rgbd_pt);
+//      msg->observations[0].sensor_name.push_back("cameradepth");
+
+      //      std::cout << rgbd_pt.point.x << "\t" << rgbd_pt.point.y << "\t" << rgbd_pt.point.z << std::endl;
 
      // }
 
@@ -621,7 +666,7 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
   }
 
-  msg->observations[0].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
+  msg->observations[idx_cam].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
   cv::Mat some[3];
   for (size_t j = 0; j < clusters[closest_centroid].size();j++)
   {

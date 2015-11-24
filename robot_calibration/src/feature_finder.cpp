@@ -25,13 +25,13 @@
 
 namespace robot_calibration
 {
-
+int FeatureFinder::prev_size = -1;
 bool loadFeatureFinders(ros::NodeHandle& nh,
                         FeatureFinderMap& features)
 {
   // Empty the mapping
   features.clear();
-
+  //prev_size=-1;
   // Construct finders to detect relevant features
   XmlRpc::XmlRpcValue finder_params;
   if (!nh.getParam("features", finder_params))

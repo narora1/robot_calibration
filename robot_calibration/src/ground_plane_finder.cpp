@@ -37,7 +37,7 @@ GroundPlaneFinder::GroundPlaneFinder(ros::NodeHandle & nh) :
                             &GroundPlaneFinder::cameraCallback,
                             this);
 
-  nh.param<std::string>("camera_sensor_name", camera_sensor_name_, "camera");
+  nh.param<std::string>("camera_sensor_name", camera_sensor_name_, "cameraground");
   nh.param<std::string>("chain_sensor_name", chain_sensor_name_, "ground");
 
   publisher_ = nh.advertise<sensor_msgs::PointCloud2>("ground_plane_points", 10);
@@ -131,11 +131,50 @@ bool GroundPlaneFinder::find(robot_calibration_msgs::CalibrationData * msg)
   sensor_msgs::PointCloud2Iterator<float> iter_cloud(cloud_, "x");
 
   // Set msg size
-  msg->observations.resize(2);
-  msg->observations[0].sensor_name = camera_sensor_name_;
-  msg->observations[0].features.resize(points_total);
-  msg->observations[1].sensor_name = chain_sensor_name_;
-  msg->observations[1].features.resize(points_total);
+//  msg->observations.resize(2);
+//  msg->observations[0].sensor_name = camera_sensor_name_;
+//  msg->observations[0].features.resize(points_total);
+//  msg->observations[1].sensor_name = chain_sensor_name_;
+//  msg->observations[1].features.resize(points_total);
+
+int idx_cam = -1;
+int idx_chain = -1;
+
+  if(msg->observations.size() == 0)
+  {
+    msg->observations.resize(2);
+    msg->observations[0].sensor_name = camera_sensor_name_;
+    msg->observations[1].sensor_name = chain_sensor_name_;
+    idx_cam = 0;
+    idx_chain = 1;
+    prev_size = 2;
+  }
+  else
+  {
+    for(size_t i=0; i< msg->observations.size(); i++)
+    {
+      if(msg->observations[i].sensor_name == camera_sensor_name_)
+      {
+         idx_cam = i;
+         idx_chain = i+1;
+        break;
+      }
+    }
+    if( idx_cam == -1 )
+    {
+      msg->observations.resize(prev_size + 2);
+      //msg->observations[0].sensor_name = camera_sensor_name_;
+      //msg->observations[1].sensor_name = chain_sensor_name_;
+      msg->observations[prev_size+0].sensor_name = camera_sensor_name_;
+      msg->observations[prev_size+1].sensor_name = chain_sensor_name_;
+      idx_cam = prev_size + 0;
+      idx_chain = prev_size + 1;
+
+    }
+  }
+
+msg->observations[idx_cam].features.resize(points_total);
+msg->observations[idx_chain].features.resize(points_total);
 
   size_t step = cloud_.width/(1.5 * points_total);
   size_t k = 0;
@@ -158,9 +197,12 @@ bool GroundPlaneFinder::find(robot_calibration_msgs::CalibrationData * msg)
     rgbd.point.x = (xyz + index)[X];
     rgbd.point.y = (xyz + index)[Y];
     rgbd.point.z = (xyz + index)[Z];
-    msg->observations[0].features[i] = rgbd;
-    msg->observations[0].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
-    msg->observations[1].features[i] = world;
+    msg->observations[idx_cam].features[i] = rgbd;
+    msg->observations[idx_cam].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
+//    msg->observations[0].sensor_name.push_back(camera_sensor_name_);
+
+    msg->observations[idx_chain].features[i] = world;
+//    msg->observations[0].sensor_name.push_back(chain_sensor_name_);
 
     iter_cloud[0] = rgbd.point.x;
     iter_cloud[1] = rgbd.point.y;

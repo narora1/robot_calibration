@@ -33,9 +33,9 @@ GroundPlaneFinder::GroundPlaneFinder(ros::NodeHandle & nh) :
   std::string topic_name;
   nh.param<std::string>("topic", topic_name, "/points");
   subscriber_ = nh.subscribe(topic_name,
-                            1,
-                            &GroundPlaneFinder::cameraCallback,
-                            this);
+      1,
+      &GroundPlaneFinder::cameraCallback,
+      this);
 
   nh.param<std::string>("camera_sensor_name", camera_sensor_name_, "cameraground");
   nh.param<std::string>("chain_sensor_name", chain_sensor_name_, "ground");
@@ -131,16 +131,10 @@ bool GroundPlaneFinder::find(robot_calibration_msgs::CalibrationData * msg)
   sensor_msgs::PointCloud2Iterator<float> iter_cloud(cloud_, "x");
 
   // Set msg size
-//  msg->observations.resize(2);
-//  msg->observations[0].sensor_name = camera_sensor_name_;
-//  msg->observations[0].features.resize(points_total);
-//  msg->observations[1].sensor_name = chain_sensor_name_;
-//  msg->observations[1].features.resize(points_total);
+  int idx_cam = -1;
+  int idx_chain = -1;
 
-int idx_cam = -1;
-int idx_chain = -1;
-
-  if(msg->observations.size() == 0)
+  if (msg->observations.size() == 0)
   {
     msg->observations.resize(2);
     msg->observations[0].sensor_name = camera_sensor_name_;
@@ -151,30 +145,27 @@ int idx_chain = -1;
   }
   else
   {
-    for(size_t i=0; i< msg->observations.size(); i++)
+    for (size_t i = 0; i < msg->observations.size(); i++)
     {
-      if(msg->observations[i].sensor_name == camera_sensor_name_)
+      if (msg->observations[i].sensor_name == camera_sensor_name_)
       {
-         idx_cam = i;
-         idx_chain = i+1;
+        idx_cam = i;
+        idx_chain = i+1;
         break;
       }
     }
-    if( idx_cam == -1 )
+    if (idx_cam == -1 )
     {
       msg->observations.resize(prev_size + 2);
-      //msg->observations[0].sensor_name = camera_sensor_name_;
-      //msg->observations[1].sensor_name = chain_sensor_name_;
       msg->observations[prev_size+0].sensor_name = camera_sensor_name_;
       msg->observations[prev_size+1].sensor_name = chain_sensor_name_;
       idx_cam = prev_size + 0;
       idx_chain = prev_size + 1;
-
     }
   }
 
-msg->observations[idx_cam].features.resize(points_total);
-msg->observations[idx_chain].features.resize(points_total);
+  msg->observations[idx_cam].features.resize(points_total);
+  msg->observations[idx_chain].features.resize(points_total);
 
   size_t step = cloud_.width/(1.5 * points_total);
   size_t k = 0;
@@ -199,10 +190,8 @@ msg->observations[idx_chain].features.resize(points_total);
     rgbd.point.z = (xyz + index)[Z];
     msg->observations[idx_cam].features[i] = rgbd;
     msg->observations[idx_cam].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
-//    msg->observations[0].sensor_name.push_back(camera_sensor_name_);
 
     msg->observations[idx_chain].features[i] = world;
-//    msg->observations[0].sensor_name.push_back(chain_sensor_name_);
 
     iter_cloud[0] = rgbd.point.x;
     iter_cloud[1] = rgbd.point.y;

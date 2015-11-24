@@ -39,6 +39,7 @@ public:
   virtual ~FeatureFinder() {};
 
   virtual bool find(robot_calibration_msgs::CalibrationData * msg) = 0;
+  static int prev_size;
 };
 
 typedef boost::shared_ptr<FeatureFinder> FeatureFinderPtr;

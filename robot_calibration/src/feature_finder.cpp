@@ -25,13 +25,15 @@
 
 namespace robot_calibration
 {
+
 int FeatureFinder::prev_size = -1;
+
 bool loadFeatureFinders(ros::NodeHandle& nh,
                         FeatureFinderMap& features)
 {
   // Empty the mapping
   features.clear();
-  //prev_size=-1;
+
   // Construct finders to detect relevant features
   XmlRpc::XmlRpcValue finder_params;
   if (!nh.getParam("features", finder_params))
@@ -57,7 +59,7 @@ bool loadFeatureFinders(ros::NodeHandle& nh,
     // Get name(space) of this finder
     std::string name = static_cast<std::string>(it->first);
     ros::NodeHandle finder_handle(nh, "features/"+name);
-    //std::cout << "features/"+name << std::endl;
+
     // Get finder type
     std::string type;
     if (!finder_handle.getParam("type", type))
@@ -85,7 +87,7 @@ bool loadFeatureFinders(ros::NodeHandle& nh,
       finder.reset(new robot_calibration::CheckerboardFinder(finder_handle));
     }
     else if (type == "robot_calibration/GripperDepthFinder")
-    {  
+    {
       ROS_INFO("  New robot_calibration/GripperDepthFinder: %s", name.c_str());
       finder.reset(new robot_calibration::GripperDepthFinder(finder_handle));
     }

@@ -37,12 +37,12 @@ const unsigned G = 1;
 const unsigned B = 2;
 
 double distancePoints(
-  const geometry_msgs::Point p1,
-  const geometry_msgs::Point p2)
+    const geometry_msgs::Point p1,
+    const geometry_msgs::Point p2)
 {
   return std::sqrt((p1.x-p2.x) * (p1.x-p2.x) +
-                   (p1.y-p2.y) * (p1.y-p2.y) +
-                   (p1.z-p2.z) * (p1.z-p2.z));
+      (p1.y-p2.y) * (p1.y-p2.y) +
+      (p1.z-p2.z) * (p1.z-p2.z));
 }
 
 LedFinder::LedFinder(ros::NodeHandle& nh) :
@@ -59,9 +59,9 @@ LedFinder::LedFinder(ros::NodeHandle& nh) :
   // Setup subscriber
   nh.param<std::string>("topic", topic_name, "/points");
   subscriber_ = nh.subscribe(topic_name,
-                             1,
-                             &LedFinder::cameraCallback,
-                             this);
+      1,
+      &LedFinder::cameraCallback,
+      this);
 
   // Publish where LEDs were seen
   publisher_ = nh.advertise<sensor_msgs::PointCloud2>("led_points", 10);
@@ -211,7 +211,7 @@ bool LedFinder::find(robot_calibration_msgs::CalibrationData * msg)
     try
     {
       listener_.transformPoint(cloud_.header.frame_id, ros::Time(0), led,
-                               led.header.frame_id, led);
+          led.header.frame_id, led);
     }
     catch (const tf::TransformException& ex)
     {
@@ -250,14 +250,11 @@ bool LedFinder::find(robot_calibration_msgs::CalibrationData * msg)
   sensor_msgs::PointCloud2Iterator<float> iter_cloud(cloud, "x");
 
   // Export results
-//  msg->observations.resize(2);
-//  msg->observations[0].sensor_name = camera_sensor_name_;
-//  msg->observations[1].sensor_name = chain_sensor_name_;
-//
+  // Handle multiple finders
   int idx_cam = -1;
-int idx_chain = -1;
+  int idx_chain = -1;
 
-  if(msg->observations.size() == 0)
+  if (msg->observations.size() == 0)
   {
     msg->observations.resize(2);
     msg->observations[0].sensor_name = camera_sensor_name_;
@@ -268,30 +265,27 @@ int idx_chain = -1;
   }
   else
   {
-    for(size_t i=0; i< msg->observations.size(); i++)
+    for (size_t i = 0; i < msg->observations.size(); i++)
     {
-      if(msg->observations[i].sensor_name == camera_sensor_name_)
+      if (msg->observations[i].sensor_name == camera_sensor_name_)
       {
-         idx_cam = i;
-         idx_chain = i+1;
+        idx_cam = i;
+        idx_chain = i+1;
         break;
       }
     }
-    if( idx_cam == -1 )
+    if (idx_cam == -1 )
     {
       msg->observations.resize(prev_size + 2);
-      //msg->observations[0].sensor_name = camera_sensor_name_;
-      //msg->observations[1].sensor_name = chain_sensor_name_;
       msg->observations[prev_size+0].sensor_name = camera_sensor_name_;
       msg->observations[prev_size+1].sensor_name = chain_sensor_name_;
       idx_cam = prev_size + 0;
       idx_chain = prev_size + 1;
-
     }
   }
- 
+
   for (size_t t = 0; t < trackers_.size(); ++t)
-  { 
+  {
     geometry_msgs::PointStamped rgbd_pt;
     geometry_msgs::PointStamped world_pt;
 
@@ -306,7 +300,7 @@ int idx_chain = -1;
     try
     {
       listener_.transformPoint(trackers_[t].frame_, ros::Time(0), rgbd_pt,
-                               rgbd_pt.header.frame_id, world_pt);
+          rgbd_pt.header.frame_id, world_pt);
     }
     catch(const tf::TransformException &ex)
     {
@@ -335,42 +329,17 @@ int idx_chain = -1;
     // Push back observation
     msg->observations[idx_cam].features.push_back(rgbd_pt);
     msg->observations[idx_cam].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
-//    msg->observations[0].sensor_name.push_back(camera_sensor_name_);
+
     // Visualize
     iter_cloud[0] = rgbd_pt.point.x;
     iter_cloud[1] = rgbd_pt.point.y;
     iter_cloud[2] = rgbd_pt.point.z;
     ++iter_cloud;
 
-    double u = 574.052 * rgbd_pt.point.x/rgbd_pt.point.z + 319.5;
-    double v = 574.052 * rgbd_pt.point.y/rgbd_pt.point.z + 239.5;
-
-    
     // Push back expected location of point on robot
     world_pt.header.frame_id = trackers_[t].frame_;
     world_pt.point = trackers_[t].point_;
     msg->observations[idx_chain].features.push_back(world_pt);
-//    msg->observations[1].sensor_name.push_back(chain_sensor_name_);
-
-    tf::TransformListener listener;
-    ros::Time time_;
-    time_ = ros::Time(0);
-
-    try
-    {
-      listener.waitForTransform("/wrist_roll_link","/head_camera_rgb_optical_frame" , time_, ros::Duration(3.0));
-      listener.transformPoint("/head_camera_rgb_optical_frame", time_, world_pt , "/wrist_roll_link", world_pt);
-    }
-    catch(const tf::TransformException &ex)
-    {
-      ROS_ERROR_STREAM("Failed to transform feature to " );//<< trackers_[t].frame_);
-      return false;
-    }
-
-    double u1= 574.052 * world_pt.point.x/world_pt.point.z + 319.5;
-    double v1 = 574.052 * world_pt.point.y/world_pt.point.z + 239.5;
-//    std::cout << "u" << u1-u << std::endl;
-//    std::cout << "v" << v1-v << std::endl;
   }
 
   // Final check that all points are valid
@@ -379,23 +348,6 @@ int idx_chain = -1;
     return false;
   }
 
-  cv::Mat rgb_points;
-  //std::cout << msg->observations[0].features.size() << std::endl;
-  for (size_t i = 0; i < msg->observations[idx_cam].features.size() - 1; i++)
-  {
-    cv::Vec3f V(msg->observations[idx_cam].features[i].point.x, msg->observations[idx_cam].features[i].point.y, msg->observations[idx_cam].features[i].point.z);
-    rgb_points.push_back(V);
-  }
-
-  cv::Vec3f normal = (rgb_points.at<cv::Vec3f>(2,0) - rgb_points.at<cv::Vec3f>(0,0)).cross(rgb_points.at<cv::Vec3f>(1,0)- rgb_points.at<cv::Vec3f>(0,0));
-
-  cv::Vec4f rgb_plane;
-  float distance = sqrt (normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
-  rgb_plane[0] = normal[0] / distance;
-  rgb_plane[1] = normal[1] / distance;
-  rgb_plane[2] = normal[2] /distance;
-  rgb_plane[3] = - (rgb_points.at<cv::Vec3f>(0,0)).dot(normal/distance); 
- 
   // Add debug cloud to message
   if (output_debug_)
   {
@@ -409,8 +361,8 @@ int idx_chain = -1;
 }
 
 LedFinder::CloudDifferenceTracker::CloudDifferenceTracker(
-  std::string frame, double x, double y, double z) :
-    frame_(frame)
+    std::string frame, double x, double y, double z) :
+  frame_(frame)
 {
   point_.x = x;
   point_.y = y;
@@ -440,11 +392,11 @@ void LedFinder::CloudDifferenceTracker::reset(size_t height, size_t width)
 
 // Weight should be +/- 1 typically
 bool LedFinder::CloudDifferenceTracker::process(
-  sensor_msgs::PointCloud2& cloud,
-  sensor_msgs::PointCloud2& prev,
-  geometry_msgs::Point& led_point,
-  double max_distance,
-  double weight)
+    sensor_msgs::PointCloud2& cloud,
+    sensor_msgs::PointCloud2& prev,
+    geometry_msgs::Point& led_point,
+    double max_distance,
+    double weight)
 {
   if ((cloud.width * cloud.height) != diff_.size())
   {
@@ -509,7 +461,6 @@ bool LedFinder::CloudDifferenceTracker::process(
     {
       max_ = diff_[i];
       max_idx_ = i;
-//      std::cout << max_ << std::endl;
     }
   }
 
@@ -517,8 +468,8 @@ bool LedFinder::CloudDifferenceTracker::process(
 }
 
 bool LedFinder::CloudDifferenceTracker::isFound(
-  const sensor_msgs::PointCloud2& cloud,
-  double threshold)
+    const sensor_msgs::PointCloud2& cloud,
+    double threshold)
 {
   // Returns true only if the max exceeds threshold
   if (max_ < threshold)
@@ -542,8 +493,8 @@ bool LedFinder::CloudDifferenceTracker::isFound(
 }
 
 bool LedFinder::CloudDifferenceTracker::getRefinedCentroid(
-  const sensor_msgs::PointCloud2& cloud,
-  geometry_msgs::PointStamped& centroid)
+    const sensor_msgs::PointCloud2& cloud,
+    geometry_msgs::PointStamped& centroid)
 {
   // Access point in cloud
   sensor_msgs::PointCloud2ConstIterator<float> iter(cloud, "x");

@@ -36,9 +36,9 @@ CheckerboardFinder::CheckerboardFinder(ros::NodeHandle & nh) :
   std::string topic_name;
   nh.param<std::string>("topic", topic_name, "/points");
   subscriber_ = nh.subscribe(topic_name,
-                             1,
-                             &CheckerboardFinder::cameraCallback,
-                             this);
+      1,
+      &CheckerboardFinder::cameraCallback,
+      this);
 
   // Size of checkerboard
   nh.param<int>("points_x", points_x_, 5);
@@ -111,7 +111,7 @@ bool CheckerboardFinder::findInternal(robot_calibration_msgs::CalibrationData * 
   geometry_msgs::PointStamped world;
 
   // Get cloud
-  if(!waitForCloud())
+  if (!waitForCloud())
   {
     ROS_ERROR("No point cloud data");
     return false;
@@ -154,7 +154,7 @@ bool CheckerboardFinder::findInternal(robot_calibration_msgs::CalibrationData * 
   points.resize(points_x_ * points_y_);
   cv::Size checkerboard_size(points_x_, points_y_);
   int found = cv::findChessboardCorners(bridge->image, checkerboard_size,
-                                        points, CV_CALIB_CB_ADAPTIVE_THRESH);
+      points, CV_CALIB_CB_ADAPTIVE_THRESH);
 
   if (found)
   {
@@ -172,44 +172,40 @@ bool CheckerboardFinder::findInternal(robot_calibration_msgs::CalibrationData * 
     sensor_msgs::PointCloud2Iterator<float> iter_cloud(cloud_, "x");
 
     // Set msg size
-//    msg->observations.resize(2);
-//    msg->observations[0].sensor_name = camera_sensor_name_;
-//    msg->observations[0].features.resize(points_x_ * points_y_);
-//    msg->observations[1].sensor_name = chain_sensor_name_;
-//    msg->observations[1].features.resize(points_x_ * points_y_);
+    // Handle multiple finders
 
- int idx_cam = -1;
- int idx_chain = -1;
+    int idx_cam = -1;
+    int idx_chain = -1;
 
-  if(msg->observations.size() == 0)
-  {
-    msg->observations.resize(2);
-    msg->observations[0].sensor_name = camera_sensor_name_;
-    msg->observations[1].sensor_name = chain_sensor_name_;
-    prev_size = 2;
-  }
-  else
-  {
-    for(size_t i=0; i< msg->observations.size(); i++)
+    if (msg->observations.size() == 0)
     {
-      if(msg->observations[i].sensor_name == camera_sensor_name_)
+      msg->observations.resize(2);
+      msg->observations[0].sensor_name = camera_sensor_name_;
+      msg->observations[1].sensor_name = chain_sensor_name_;
+      prev_size = 2;
+    }
+    else
+    {
+      for (size_t i = 0; i < msg->observations.size(); i++)
       {
-         idx_cam = i;
-         idx_chain = i+1;
-        break;
+        if (msg->observations[i].sensor_name == camera_sensor_name_)
+        {
+          idx_cam = i;
+          idx_chain = i+1;
+          break;
+        }
+      }
+      if (idx_cam == -1 )
+      {
+        msg->observations.resize(prev_size + 2);
+        msg->observations[prev_size+0].sensor_name = camera_sensor_name_;
+        msg->observations[prev_size+1].sensor_name = chain_sensor_name_;
+        idx_cam = prev_size + 0;
+        idx_chain = prev_size + 1;
       }
     }
-    if( idx_cam == -1 )
-    {
-      msg->observations.resize(prev_size + 2);
-      msg->observations[prev_size+0].sensor_name = camera_sensor_name_;
-      msg->observations[prev_size+1].sensor_name = chain_sensor_name_;
-      idx_cam = prev_size + 0;
-      idx_chain = prev_size + 1;
-    }
-  }
-  msg->observations[idx_cam].features.resize(points_x_ * points_y_);
-  msg->observations[idx_chain].features.resize(points_x_ * points_y_);
+    msg->observations[idx_cam].features.resize(points_x_ * points_y_);
+    msg->observations[idx_chain].features.resize(points_x_ * points_y_);
 
 
     // Fill in the headers
@@ -242,10 +238,8 @@ bool CheckerboardFinder::findInternal(robot_calibration_msgs::CalibrationData * 
 
       msg->observations[0].features[i] = rgbd;
       msg->observations[0].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
-//      msg->observations[0].sensor_name.push_back(camera_sensor_name_);
 
       msg->observations[1].features[i] = world;
-  //    msg->observations[0].sensor_name.push_back(chain_sensor_name_);
 
       // Visualize
       iter_cloud[0] = rgbd.point.x;

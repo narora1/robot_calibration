@@ -451,6 +451,7 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
   //  std::cout << chain_sensor_name_ << std::endl;
   // transform them to the base frame
   
+/*
 int idx_cam = -1;
 int idx_chain = -1;
 
@@ -487,8 +488,17 @@ int idx_chain = -1;
 
     }
   }
- 
-  cv::Mat points_on_plane_transformed;
+ */
+
+  int idx_cam = msg->observations.size() + 0;
+  int idx_chain = msg->observations.size() + 1;
+  msg->observations.resize(msg->observations.size() + 2);
+  //if(msg->observations.size() == 0)
+ // {
+//    msg->observations.resize(size_+2);
+    msg->observations[idx_cam].sensor_name = camera_sensor_name_;
+    msg->observations[idx_chain].sensor_name = chain_sensor_name_;
+ cv::Mat points_on_plane_transformed;
   tf::StampedTransform transform;
 
   for(size_t i=0; i< points_on_plane.rows;i++)

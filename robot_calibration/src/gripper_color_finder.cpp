@@ -244,19 +244,19 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
     prev_image = image_;
   }
   // Export results
-  int idx_cam = -1;
-  int idx_chain = -1;
-
-  if(msg->observations.size() == 0)
-  {
-    msg->observations.resize(2);
-    msg->observations[0].sensor_name = camera_sensor_name_;
-    msg->observations[1].sensor_name = chain_sensor_name_;
-    idx_cam = 0;
-    idx_chain = 1;
-    prev_size = 2;
-  }
-  else
+  int idx_cam = msg->observations.size() + 0;
+  int idx_chain = msg->observations.size() + 1;
+  msg->observations.resize(msg->observations.size() + 2);
+  //if(msg->observations.size() == 0)
+ // {
+  //  msg->observations.resize(size_+2);
+    msg->observations[idx_cam].sensor_name = camera_sensor_name_;
+    msg->observations[idx_chain].sensor_name = chain_sensor_name_;
+   //dx_cam = size_ + 0;
+   //dx_chain = size_ + 1;
+   //ize_ = 2;
+ // }
+/*else
   {
     for(size_t i=0; i< msg->observations.size(); i++)
     {
@@ -266,18 +266,17 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
         idx_chain = i+1;
         break;
       }
-    }
-    if( idx_cam == -1 )
-    {
-      msg->observations.resize(prev_size + 2);
-      msg->observations[prev_size+0].sensor_name = camera_sensor_name_;
-      msg->observations[prev_size+1].sensor_name = chain_sensor_name_;
-      idx_cam = prev_size + 0;
-      idx_chain = prev_size + 1;
-
+    //} 
+   // if( idx_cam == -1 )
+   // {
+      msg->observations.resize(size_ + 2);
+      msg->observations[size_ +0].sensor_name = camera_sensor_name_;
+      msg->observations[size_ +1].sensor_name = chain_sensor_name_;
+      idx_cam = size_ + 0;
+      idx_chain = size_ + 1;
     } 
-  }
-
+ // }
+*/
   for (size_t t = 0; t < trackers_.size(); ++t)
   {
     geometry_msgs::PointStamped rgbd_pt;

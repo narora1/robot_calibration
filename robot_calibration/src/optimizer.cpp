@@ -333,7 +333,7 @@ int Optimizer::optimize(OptimizationParams& params,
           
           cost->Evaluate(params, residuals, NULL);
                       std::cout << "INITIAL COST (" << i << ")" << std::endl << "  x: ";
-                      for (size_t k = 0; k < data[i].observations[index].fatures.size(); ++k)
+                      for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
                       std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 0)];
                       std::cout << std::endl << "  y: ";
                       for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)

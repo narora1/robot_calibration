@@ -146,8 +146,8 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
   {
     for(size_t j = 1; j < (cv_ptr->image.cols - 1); j++)
     { 
-      mgod->image.at<float>(i, j) = sqrt(((cv_ptr->image.at<float>(i+1,j)-cv_ptr->image.at<float>(i-1,j))* (cv_ptr->image.at<float>(i+1,j)-cv_ptr->image.at<float>(i-1,j))) 
-          + ((cv_ptr->image.at<float>(i,j+1)- cv_ptr->image.at<float>(i,j-1))*( cv_ptr->image.at<float>(i,j+1)- cv_ptr->image.at<float>(i,j-1))));
+      mgod->image.at<float>(i, j) = sqrt(((cv_ptr->image.at<float>(i+1,j) - cv_ptr->image.at<float>(i-1,j)) * (cv_ptr->image.at<float>(i+1,j) - cv_ptr->image.at<float>(i-1,j))) 
+          + ((cv_ptr->image.at<float>(i,j+1) - cv_ptr->image.at<float>(i,j-1)) * (cv_ptr->image.at<float>(i,j+1) - cv_ptr->image.at<float>(i,j-1))));
 
       dx = cv_ptr->image.at<float>(i,j+1) - cv_ptr->image.at<float>(i,j-1); 
       dy = cv_ptr->image.at<float>(i+1,j) - cv_ptr->image.at<float>(i-1,j);
@@ -590,7 +590,7 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
   
   // to find the plane. not used right now.
  
-  
+/*  
   cv::Mat some[3];
   for (size_t j = 0; j < clusters[closest_centroid].size();j++)
   {
@@ -646,12 +646,12 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
   std::cout << plane_coefficients[i][1] << std::endl;
   std::cout << plane_coefficients[i][2] << std::endl;
   std::cout << plane_coefficients[i][3] << std::endl;
-  /*for (size_t j = 0; j < 4; j++)
-  {
-  depth_plane.plane_equation.push_back(1);
+  //for (size_t j = 0; j < 4; j++)
+ // {
+ // depth_plane.plane_equation.push_back(1);
   //        depth_plane.plane_equation.push_back(plane_coefficients[i][j]);
-  } */
-  }
+ // } 
+  }*/
   
   //  msg->observations[0].features.push_back(plane_coefficients);
   //  msg->observations[0].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();

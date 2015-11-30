@@ -95,7 +95,7 @@ struct GripperDepthError
         for (size_t j = 0; j < hull.size() ; j++)
         {
           float distance = pow((hull[j].x - camera_pts[i].point.x), 2) + pow((hull[j].y - camera_pts[i].point.y), 2);
-          if (distance< min_dist)
+          if (distance < min_dist)
           {
             min_dist = distance;
             closest_point = hull[j];
@@ -120,7 +120,7 @@ struct GripperDepthError
 
       residuals[(3*i)+0] = camera_pts[i].point.x - closest_point.x;
       residuals[(3*i)+1] = camera_pts[i].point.y - closest_point.y;
-      residuals[(3*i)+2] = (camera_pts[i].point.x*plane[0] + camera_pts[i].point.y*plane[1] + camera_pts[i].point.z*plane[2] + plane[3]);
+      residuals[(3*i)+2] = (camera_pts[i].point.x * plane[0] + camera_pts[i].point.y * plane[1] + camera_pts[i].point.z * plane[2] + plane[3]);
     }
     return true;
   }

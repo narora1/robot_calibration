@@ -26,7 +26,6 @@
 #include <robot_calibration/models/camera2d.h>
 #include <robot_calibration/models/chain.h>
 #include <robot_calibration_msgs/CalibrationData.h>
-#include <robot_calibration/models/camera2d.h>
 
 namespace robot_calibration
 {

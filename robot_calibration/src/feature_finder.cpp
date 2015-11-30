@@ -20,6 +20,8 @@
 #include <robot_calibration/capture/led_finder.h>
 #include <robot_calibration/capture/checkerboard_finder.h>
 #include <robot_calibration/capture/ground_plane_finder.h>
+#include <robot_calibration/capture/gripper_depth_finder.h>
+#include <robot_calibration/capture/gripper_color_finder.h>
 
 namespace robot_calibration
 {
@@ -81,6 +83,16 @@ bool loadFeatureFinders(ros::NodeHandle& nh,
     {
       ROS_INFO("  New robot_calibration/CheckerboardFinder: %s", name.c_str());
       finder.reset(new robot_calibration::CheckerboardFinder(finder_handle));
+    }
+    else if (type == "robot_calibration/GripperDepthFinder")
+    {
+      ROS_INFO("  New robot_calibration/GripperDepthFinder: %s", name.c_str());
+      finder.reset(new robot_calibration::GripperDepthFinder(finder_handle));
+    }
+    else if (type == "robot_calibration/GripperColorFinder")
+    {
+      ROS_INFO("  New robot_calibration/GripperColorFinder: %s", name.c_str());
+      finder.reset(new robot_calibration::GripperColorFinder(finder_handle));
     }
     else
     {

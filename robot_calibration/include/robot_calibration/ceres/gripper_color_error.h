@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-// Author: Michael Ferguson
 
 #ifndef ROBOT_CALIBRATION_CERES_GRIPPER_COLOR_ERROR_H
 #define ROBOT_CALIBRATION_CERES_GRIPPER_COLOR_ERROR_H
@@ -28,6 +27,7 @@
 #include <robot_calibration/models/chain.h>
 #include <robot_calibration_msgs/CalibrationData.h>
 #include <robot_calibration/models/camera2d.h>
+
 namespace robot_calibration
 {
 
@@ -44,9 +44,9 @@ struct GripperColorError
    *  \param data The calibration data collected
    */
   GripperColorError(Camera2dModel* camera_model,
-                     ChainModel* arm_model,
-                     CalibrationOffsetParser* offsets,
-                     robot_calibration_msgs::CalibrationData& data)
+                    ChainModel* arm_model,
+                    CalibrationOffsetParser* offsets,
+                    robot_calibration_msgs::CalibrationData& data)
   {
     camera_model_ = camera_model;
     arm_model_ = arm_model;
@@ -73,16 +73,11 @@ struct GripperColorError
 
     // Project the camera observations
     std::vector<geometry_msgs::PointStamped> camera_pts =
-         camera_model_->project_(data_,arm_pts, *offsets_);
-//    std::cout << "color" << std::endl;
-//    std::cout <<  data_.observations[0].features.size() <<std::endl;
+        camera_model_->project_(data_, arm_pts, *offsets_);
 
     // Compute residuals
     for (size_t i = 0; i < camera_pts.size(); ++i)
     {
-//      std::cout <<"camera_pts" << camera_pts.size() << std::endl;
-     // std::cout << "x" << camera_pts[i].point.x << "\t" << data_.observations[0].features[i].point.x << std::endl;
-     // std::cout << "y" << camera_pts[i].point.y << "\t" << data_.observations[0].features[i].point.y << std::endl;
       residuals[(2*i)+0] = camera_pts[i].point.x - data_.observations[0].features[i].point.y;
       residuals[(2*i)+1] = camera_pts[i].point.y - data_.observations[0].features[i].point.x;
     }
@@ -104,15 +99,20 @@ struct GripperColorError
                                      robot_calibration_msgs::CalibrationData& data)
   {
     int index = -1;
-      for (size_t k =0; k < data.observations.size() ; k++)
+    for (size_t k = 0; k < data.observations.size() ; k++)
+    {
+      if (data.observations[k].sensor_name == "camerargb")
       {
-       //std::cout << data.observations.size() << std::endl;
-        if ( data.observations[k].sensor_name == "camerargb")//camera_name)
-        {
-          index = k;
-          break;
-        }
+        index = k;
+        break;
       }
+    }
+
+    if (index == -1)
+    {
+      std::cerr << "Sensor name doesn't match any of the existing finders" << std::endl;
+      return 0;
+    }
 
     ceres::DynamicNumericDiffCostFunction<GripperColorError> * func;
     func = new ceres::DynamicNumericDiffCostFunction<GripperColorError>(

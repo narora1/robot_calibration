@@ -40,7 +40,6 @@ class GripperColorFinder : public FeatureFinder
   /** @brief Internally used within LED finder to track each of several LEDs. */
   struct CloudDifferenceTracker
   {
-
     CloudDifferenceTracker(std::string frame, double x, double y, double z);
 
     /**
@@ -70,10 +69,6 @@ class GripperColorFinder : public FeatureFinder
     // Reset the tracker
     void reset(size_t height, size_t width);
 
-    // Get an image of tracker status
-//    sensor_msgs::Image getImage();
-
-   // std::vector< std::vector<double> > diff_;
     std::vector<double> diff_;
     double max_;
     int max_idx_;
@@ -81,7 +76,7 @@ class GripperColorFinder : public FeatureFinder
     int count_;
     size_t height_, width_;
     std::string frame_;  // frame of led coordinates
-    geometry_msgs::Point point_;  //coordinates of led this is tracking
+    geometry_msgs::Point point_;  // coordinates of led this is tracking
   };
 
   typedef actionlib::SimpleActionClient<robot_calibration_msgs::GripperLedCommandAction> LedClient;
@@ -101,8 +96,8 @@ private:
   void cameraInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
   bool waitForCloud();
 
-  ros::Subscriber subscriber_;  /// Incoming sensor_msgs::PointCloud2
-  ros::Publisher publisher_;  /// Outgoing sensor_msgs::PointCloud2
+  ros::Subscriber subscriber_;
+  ros::Publisher publisher_;
   boost::scoped_ptr<LedClient> client_;
 
   bool waiting_;
@@ -128,7 +123,7 @@ private:
 
   boost::mutex mutex_K_;
   cv::Mat K_;
- 
+
   std::string camera_sensor_name_;
   std::string chain_sensor_name_;
 };

@@ -41,7 +41,7 @@ GripperDepthFinder::GripperDepthFinder(ros::NodeHandle & nh) :
 {
   std::string topic_name;
 
-  subscriber_ = nh.subscribe("/head_camera/depth/image",//topic_name,
+  subscriber_ = nh.subscribe("/head_camera/depth/image",
       1,
       &GripperDepthFinder::cameraCallback,
       this);
@@ -113,6 +113,11 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
   cv_bridge::CvImagePtr dgod;
   cv_bridge::CvImagePtr cluster;
 
+
+  if (!waitForCloud())
+  {
+    return false;
+  }
   try
   {
     crap = cv_bridge::toCvCopy(image_, "32FC1");
@@ -490,7 +495,9 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
   plane_transformed[1] = normal[1] / distance;
   plane_transformed[2] = normal[2] /distance;
   plane_transformed[3] = - V0.dot(normal/distance);
-
+ 
+  std::cout << "gripper coeeficients" << std::endl;
+  std::cout << plane_transformed[0] << "\t" << plane_transformed[1] << "\t" << plane_transformed[2] << "\t" << plane_transformed[3] << std::endl;
 
   // find the closest cluster centroid to the gripper centroid
   float min_distance = 1000;
@@ -539,6 +546,11 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
     return false;
   } 
 
+  // if the variance is too high then we have an under segmentation problem.
+  // need to break the cluster.
+  // also do region merging in case the clusters are too small.
+
+  
   cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
   cv::Mat gripper_cluster = cv::Mat::zeros( cv_ptr->image.size(), CV_8UC3);
   cv::Mat gripper_cluster_ = cv::Mat::zeros( cv_ptr->image.size(), CV_32FC1);
@@ -578,7 +590,7 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
   
   // to find the plane. not used right now.
  
-  /*
+  
   cv::Mat some[3];
   for (size_t j = 0; j < clusters[closest_centroid].size();j++)
   {
@@ -604,8 +616,8 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
   cv::Mat gripper_points_;
   cv::merge(gripper_points, gripper_points_);
-*/
-  /* // Find plane(s)
+
+   // Find plane(s)
      if (plane_estimator_.empty())
      {
      plane_estimator_ = cv::Algorithm::create<cv::RgbdPlane>("RGBD.RgbdPlane");
@@ -618,13 +630,13 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
   // Distance a point can be from plane and still be part of it
   plane_estimator_->set("threshold", 0.003);//observations_threshold_);
   // Minimum cluster size to be a plane
-  plane_estimator_->set("min_size", some[0].rows/2);
+  plane_estimator_->set("min_size", some[0].rows/3);
   }
   cv::Mat planes_mask;
   std::vector<cv::Vec4f> plane_coefficients;
-  //(*plane_estimator_)(gripper_points_,  planes_mask, plane_coefficients);
+  (*plane_estimator_)(gripper_points_,  planes_mask, plane_coefficients);
 
-  //  std::cout << "number of planes" <<plane_coefficients.size() << std::endl;
+    std::cout << "number of planes" <<plane_coefficients.size() << std::endl;
 
   robot_calibration_msgs::Plane depth_plane;
 
@@ -634,13 +646,13 @@ bool GripperDepthFinder::find(robot_calibration_msgs::CalibrationData * msg)
   std::cout << plane_coefficients[i][1] << std::endl;
   std::cout << plane_coefficients[i][2] << std::endl;
   std::cout << plane_coefficients[i][3] << std::endl;
-  for (size_t j = 0; j < 4; j++)
+  /*for (size_t j = 0; j < 4; j++)
   {
   depth_plane.plane_equation.push_back(1);
   //        depth_plane.plane_equation.push_back(plane_coefficients[i][j]);
-  } 
+  } */
   }
-*/  
+  
   //  msg->observations[0].features.push_back(plane_coefficients);
   //  msg->observations[0].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
 

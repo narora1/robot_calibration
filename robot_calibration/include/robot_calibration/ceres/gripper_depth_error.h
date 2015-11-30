@@ -34,9 +34,9 @@ namespace robot_calibration
 struct GripperDepthError
 {
   GripperDepthError(Camera3dModel* camera_model,
-                   ChainModel* arm_model,
-                   CalibrationOffsetParser* offsets,
-                   robot_calibration_msgs::CalibrationData& data)
+                    ChainModel* arm_model,
+                    CalibrationOffsetParser* offsets,
+                    robot_calibration_msgs::CalibrationData& data)
   {
     camera_model_ = camera_model;
     arm_model_ = arm_model;
@@ -57,45 +57,45 @@ struct GripperDepthError
         camera_model_->project(data_, *offsets_);
 
     std::vector<geometry_msgs::PointStamped> arm_pts =
-              arm_model_->project(data_, *offsets_);
+        arm_model_->project(data_, *offsets_);
 
     cv::Mat points;
-    for(size_t i =0; i<arm_pts.size(); i++)
+    for (size_t i = 0; i < arm_pts.size(); i++)
     {
-      cv::Vec3f V(arm_pts[i].point.x,arm_pts[i].point.y, arm_pts[i].point.z);
+      cv::Vec3f V(arm_pts[i].point.x, arm_pts[i].point.y, arm_pts[i].point.z);
       points.push_back(V);
     }
 
-    cv::Vec3f normal = ( points.at<cv::Vec3f>(2,0) -  points.at<cv::Vec3f>(0,0)).cross( points.at<cv::Vec3f>(1,0) -  points.at<cv::Vec3f>(0,0));
+    cv::Vec3f normal = (points.at<cv::Vec3f>(2,0) -  points.at<cv::Vec3f>(0,0)).cross(points.at<cv::Vec3f>(1,0) -  points.at<cv::Vec3f>(0,0));
     cv::Vec4f plane;
-    float distance = sqrt (normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+    float distance = sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
     plane[0] = normal[0] / distance;
     plane[1] = normal[1] / distance;
-    plane[2] = normal[2] /distance;
-    plane[3] = - points.at<cv::Vec3f>(1,0).dot(normal/distance);
+    plane[2] = normal[2] / distance;
+    plane[3] = - points.at<cv::Vec3f>(0,0).dot(normal / distance);
 
     cv::Mat points_planar;
-    for(size_t i =0; i<arm_pts.size(); i++)
+    for (size_t i = 0; i < arm_pts.size(); i++)
     {
-      cv::Point V(arm_pts[i].point.x,arm_pts[i].point.y);
+      cv::Point V(arm_pts[i].point.x, arm_pts[i].point.y);
       points_planar.push_back(V);
     }
 
     std::vector<cv::Point> hull;
     cv::Point closest_point;
     cv::convexHull(points_planar, hull, false);
-    
+
     // Compute residuals
     for (size_t i = 0; i < camera_pts.size() ; ++i)
     {
       double dist = cv::pointPolygonTest(hull, cv::Point(camera_pts[i].point.x, camera_pts[i].point.y), false);
-      float min_dist=10000;
-      if (dist<0)    
+      float min_dist = 10000;
+      if (dist < 0)
       {
-        for(size_t j =0; j < hull.size() ; j++)
+        for (size_t j = 0; j < hull.size() ; j++)
         {
-          float distance = pow((hull[j].x - camera_pts[i].point.x),2) + pow((hull[j].y - camera_pts[i].point.y),2);
-          if( distance< min_dist)
+          float distance = pow((hull[j].x - camera_pts[i].point.x), 2) + pow((hull[j].y - camera_pts[i].point.y), 2);
+          if (distance< min_dist)
           {
             min_dist = distance;
             closest_point = hull[j];
@@ -107,12 +107,11 @@ struct GripperDepthError
             camera_pts[i].point.x = 0;
             camera_pts[i].point.y = 0;
             camera_pts[i].point.z = 0;
-
           }
         }
-      } 
-      
-      if(isnan(camera_pts[i].point.x) || isnan(camera_pts[i].point.y) || isnan(camera_pts[i].point.z))
+      }
+
+      if (isnan(camera_pts[i].point.x) || isnan(camera_pts[i].point.y) || isnan(camera_pts[i].point.z))
       {
         camera_pts[i].point.x = 0;
         camera_pts[i].point.y = 0;
@@ -121,7 +120,7 @@ struct GripperDepthError
 
       residuals[(3*i)+0] = camera_pts[i].point.x - closest_point.x;
       residuals[(3*i)+1] = camera_pts[i].point.y - closest_point.y;
-      residuals[(3*i)+2] = (camera_pts[i].point.x*plane[0] + camera_pts[i].point.y*plane[1] + camera_pts[i].point.z*plane[2] + plane[3]);// / sqrt(pow(plane[0],2) + pow(plane[1],2) + pow(plane[2],2));
+      residuals[(3*i)+2] = (camera_pts[i].point.x*plane[0] + camera_pts[i].point.y*plane[1] + camera_pts[i].point.z*plane[2] + plane[3]);
     }
     return true;
   }
@@ -130,21 +129,26 @@ struct GripperDepthError
                                      ChainModel* arm_model,
                                      CalibrationOffsetParser* offsets,
                                      robot_calibration_msgs::CalibrationData& data)
-  {  
+  {
     int index = -1;
-      for (size_t k =0; k < data.observations.size() ; k++)
-      {      
-        if ( data.observations[k].sensor_name == "cameradepth")//camera_name)
-        {
-          index = k;
-          break;
-        }
+    for (size_t k = 0; k < data.observations.size() ; k++)
+    {
+      if (data.observations[k].sensor_name == "cameradepth")
+      {
+        index = k;
+        break;
       }
-         
+    }
+
+    if (index == -1)
+    {
+      std::cerr << "Sensor name doesn't match any of the existing finders" << std::endl;
+      return 0;
+    }
 
     ceres::DynamicNumericDiffCostFunction<GripperDepthError> * func;
     func = new ceres::DynamicNumericDiffCostFunction<GripperDepthError>(
-                    new GripperDepthError(camera_model, arm_model,offsets, data ));
+                    new GripperDepthError(camera_model, arm_model, offsets, data ));
     func->AddParameterBlock(offsets->size());
     func->SetNumResiduals(data.observations[index].features.size()*3);
 

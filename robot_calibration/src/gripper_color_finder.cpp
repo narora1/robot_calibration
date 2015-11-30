@@ -27,7 +27,6 @@ GripperColorFinder::GripperColorFinder(ros::NodeHandle& nh) :
   FeatureFinder(nh),
   waiting_(false)
 {
-
   // Setup the action client
   std::string topic_name;
   nh.param<std::string>("action", topic_name, "/gripper_led_action");
@@ -160,7 +159,7 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
   robot_calibration_msgs::GripperLedCommandGoal command;
   command.led_code = 0;
   client_->sendGoal(command);
-  client_->waitForResult(ros::Duration(10.0)); 
+  client_->waitForResult(ros::Duration(10.0));
 
   sensor_msgs::Image prev_image;
 
@@ -185,7 +184,7 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
     client_->sendGoal(command);
     client_->waitForResult(ros::Duration(10.0));
 
-    if(!waitForCloud())
+    if (!waitForCloud())
     {
       return false;
     }
@@ -209,7 +208,7 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
     geometry_msgs::PointStamped led;
     led.point = trackers_[tracker].point_;
-    led.header.frame_id = "wrist_roll_link";//trackers_[tracker].frame_;
+    led.header.frame_id = "wrist_roll_link";
 
     geometry_msgs::PointStamped world_pt;
     tf::TransformListener listener;
@@ -218,12 +217,12 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
     try
     {
-      listener.waitForTransform("/wrist_roll_link","/head_camera_rgb_optical_frame" , time_, ros::Duration(3.0));
+      listener.waitForTransform("/wrist_roll_link", "/head_camera_rgb_optical_frame" , time_, ros::Duration(3.0));
       listener.transformPoint("/head_camera_rgb_optical_frame", time_, led , "/wrist_roll_link", world_pt);
     }
     catch(const tf::TransformException &ex)
     {
-      ROS_ERROR_STREAM("Failed to transform feature to " );//<< trackers_[t].frame_);
+      ROS_ERROR_STREAM("Failed to transform feature ");
       return false;
     }
 
@@ -247,36 +246,9 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
   int idx_cam = msg->observations.size() + 0;
   int idx_chain = msg->observations.size() + 1;
   msg->observations.resize(msg->observations.size() + 2);
-  //if(msg->observations.size() == 0)
- // {
-  //  msg->observations.resize(size_+2);
-    msg->observations[idx_cam].sensor_name = camera_sensor_name_;
-    msg->observations[idx_chain].sensor_name = chain_sensor_name_;
-   //dx_cam = size_ + 0;
-   //dx_chain = size_ + 1;
-   //ize_ = 2;
- // }
-/*else
-  {
-    for(size_t i=0; i< msg->observations.size(); i++)
-    {
-      if(msg->observations[i].sensor_name == camera_sensor_name_)
-      {
-        idx_cam = i;
-        idx_chain = i+1;
-        break;
-      }
-    //} 
-   // if( idx_cam == -1 )
-   // {
-      msg->observations.resize(size_ + 2);
-      msg->observations[size_ +0].sensor_name = camera_sensor_name_;
-      msg->observations[size_ +1].sensor_name = chain_sensor_name_;
-      idx_cam = size_ + 0;
-      idx_chain = size_ + 1;
-    } 
- // }
-*/
+  msg->observations[idx_cam].sensor_name = camera_sensor_name_;
+  msg->observations[idx_chain].sensor_name = chain_sensor_name_;
+
   for (size_t t = 0; t < trackers_.size(); ++t)
   {
     geometry_msgs::PointStamped rgbd_pt;
@@ -291,7 +263,7 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
     geometry_msgs::PointStamped led;
     led.point = trackers_[t].point_;
-    led.header.frame_id = "wrist_roll_link";//trackers_[tracker].frame_;
+    led.header.frame_id = "wrist_roll_link";
 
     tf::TransformListener listener;
     ros::Time time_;
@@ -299,12 +271,12 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
     try
     {
-      listener.waitForTransform("/wrist_roll_link","/head_camera_rgb_optical_frame" , time_, ros::Duration(3.0));
+      listener.waitForTransform("/wrist_roll_link", "/head_camera_rgb_optical_frame" , time_, ros::Duration(3.0));
       listener.transformPoint("/head_camera_rgb_optical_frame", time_, led , "/wrist_roll_link", world_pt);
     }
     catch(const tf::TransformException &ex)
     {
-      ROS_ERROR_STREAM("Failed to transform feature to " );//<< trackers_[t].frame_);
+      ROS_ERROR_STREAM("Failed to transform feature");
       return false;
     }
 
@@ -314,7 +286,7 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
     float distance_x = sqrt((rgbd_pt.point.x - v) * (rgbd_pt.point.x - v));
     float distance_y = sqrt((rgbd_pt.point.y - u) * (rgbd_pt.point.y - u));
     if (distance_x > 30 || distance_y > 30)
-    {  
+    {
       ROS_ERROR_STREAM("Feature was too far away from expected pose in"  << distance_x << "\t" << distance_y);
       return false;
     }
@@ -327,8 +299,7 @@ bool GripperColorFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
     msg->observations[idx_chain].features.push_back(world_point);
     msg->observations[idx_chain].ext_camera_info = depth_camera_manager_.getDepthCameraInfo();
-
-  } 
+  }
   return true;
 }
 
@@ -383,7 +354,7 @@ bool GripperColorFinder::CloudDifferenceTracker::process(
   cv_bridge::CvImagePtr cv_ptr;
   cv_bridge::CvImagePtr cv_ptr_prev;
   try
-  { 
+  {
     cv_ptr = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
     cv_ptr_prev = cv_bridge::toCvCopy(prev, sensor_msgs::image_encodings::BGR8);
   }
@@ -397,9 +368,7 @@ bool GripperColorFinder::CloudDifferenceTracker::process(
   std::vector<cv::Mat> prev_color;
   cv::split(cv_ptr_prev->image , prev_color);
 
-  //double last_distance = 1000.0;
-
-  // Update each point in the tracker
+    // Update each point in the tracker
 
   int valid = 0;
   int used = 0;
@@ -415,7 +384,7 @@ bool GripperColorFinder::CloudDifferenceTracker::process(
     double distance_x = (u - n) * (u-n);
     double distance_y = (v-m) * (v-m);
 
-    //appx 15 pixel radius
+    // appx 15 pixel radius
     if ( distance_x < 1000 && distance_y <1000)
     {
       double b = (double)(color[0].at<uint8_t>(m,n)) - (double)(prev_color[0].at<uint8_t>(m,n));
@@ -424,12 +393,12 @@ bool GripperColorFinder::CloudDifferenceTracker::process(
 
       if (r > 0 && g > 0 && b > 0 && weight > 0)
       {
-        diff_[i] += (r+b+g ) * weight;
+        diff_[i] += (r+b+g) * weight;
         used++;
       }
       else if (r < 0 && g < 0 && b < 0 && weight < 0)
       {
-        diff_[i] += (r+b+g ) * weight;
+        diff_[i] += (r+b+g) * weight;
         used++;
       }
 
@@ -438,9 +407,9 @@ bool GripperColorFinder::CloudDifferenceTracker::process(
       {
         max_ = diff_[i];
         max_idx_ = i;
-        //       std::cout << "max" << max_ << std::endl;
       }
-    }}
+    }
+  }
   return true;
 }
 
@@ -452,14 +421,12 @@ bool GripperColorFinder::CloudDifferenceTracker::getRefinedCentroid(
   centroid.header = image.header;
   centroid.point.x =  max_idx_ / image.width;
   centroid.point.y =  max_idx_ % image.width;
-  //std::cout << "centroid" << std::endl;
-  //std::cout << centroid.point.x << std::endl;
-  //std::cout << centroid.point.y << std::endl;
+
   // Get a better centroid
   int points = 0;
   double sum_x = 0.0;
   double sum_y = 0.0;
-  //  double sum_z = 0.0;
+
   for (size_t i = 0; i < (image.height*image.width); i++)
   {
     // Using highly likely points
@@ -470,8 +437,8 @@ bool GripperColorFinder::CloudDifferenceTracker::getRefinedCentroid(
 
       double dx = m - centroid.point.x;
       double dy = n - centroid.point.y;
-      //std::cout << "dx" << dx << "dy" << dy << std::endl;
-      // That are less than appx 3 pixels from the max point 
+
+      // That are less than appx 3 pixels from the max point
       if ((dx*dx) <10 && (dy*dy) < 10)
       {
         sum_x += m;
@@ -504,4 +471,4 @@ bool GripperColorFinder::CloudDifferenceTracker::isFound(
   return true;
 }
 
-} 
+}  // namespace robot_calibration

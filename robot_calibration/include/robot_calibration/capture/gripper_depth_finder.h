@@ -36,7 +36,6 @@ namespace robot_calibration
 
 class GripperDepthFinder : public FeatureFinder
 {
-
 public:
   GripperDepthFinder(ros::NodeHandle & n);
 
@@ -57,7 +56,7 @@ private:
 
   boost::mutex mutex_K_;
   cv::Mat K_;
- 
+
   std::string camera_sensor_name_;
   std::string chain_sensor_name_;
 };

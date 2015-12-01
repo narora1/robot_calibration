@@ -77,7 +77,7 @@ private:
   std::string led_frame_;
   KDL::Tree tree_;
 
-  std::map<std::string, ChainModel*> models_;
+  std::map<std::string, std::vector<ChainModel*> > models_;
 
   boost::shared_ptr<CalibrationOffsetParser> offsets_;
   boost::shared_ptr<ceres::Solver::Summary> summary_;

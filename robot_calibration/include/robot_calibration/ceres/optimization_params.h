@@ -38,10 +38,19 @@ struct OptimizationParams
     bool yaw;
   };
 
+  struct Chains
+  {
+    std::string name;
+    std::string type;
+    bool inv;
+    XmlRpc::XmlRpcValue params;
+  };
+
   struct Params
   {
     std::string name;
     std::string type;
+    std::vector<Chains> chains;
     XmlRpc::XmlRpcValue params;
   };
 

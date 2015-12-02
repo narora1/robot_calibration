@@ -42,13 +42,17 @@ struct Camera3dToArmError
    *  \param free_param_info Helper container for processing the free parameters.
    *  \param data The calibration data collected
    */
-  Camera3dToArmError(Camera3dModel* camera_model,
-                     ChainModel* arm_model,
+  Camera3dToArmError(const std::vector<ChainModel*> /*amera3dModel* */ &camera_model,
+                     const std::vector<ChainModel*> &arm_model,
                      CalibrationOffsetParser* offsets,
                      robot_calibration_msgs::CalibrationData& data)
   {
-    camera_model_ = camera_model;
-    arm_model_ = arm_model;
+    if (camera_model.size() != 1)
+    {
+
+    }
+    camera_model_ = dynamic_cast<Camera3dModel*>(camera_model.at(0));
+    arm_model_ = arm_model.at(0);
     offsets_ = offsets;
     data_ = data;
   }
@@ -101,8 +105,8 @@ struct Camera3dToArmError
    *  \tparam num_free_params The number of free parameters being used for
    *          joint and link calibration.
    */
-  static ceres::CostFunction* Create(Camera3dModel* camera_model,
-                                     ChainModel* arm_model,
+  static ceres::CostFunction* Create(const std::vector<ChainModel*> &camera_model,
+                                     const std::vector<ChainModel*> &arm_model,
                                      CalibrationOffsetParser* offsets,
                                      robot_calibration_msgs::CalibrationData& data)
   {

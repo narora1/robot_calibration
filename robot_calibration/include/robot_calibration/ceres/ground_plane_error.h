@@ -30,12 +30,12 @@ namespace robot_calibration
 
 struct GroundPlaneError
 {
-  GroundPlaneError(Camera3dModel* camera_model,
+  GroundPlaneError(const std::vector<ChainModel*> /*Camera3dModel* */ &camera_model,
+                   double z,
                    CalibrationOffsetParser* offsets,
-                   robot_calibration_msgs::CalibrationData& data,
-                   double z)
+                   robot_calibration_msgs::CalibrationData& data)
   {
-    camera_model_ = camera_model;
+    camera_model_ = dynamic_cast<Camera3dModel*>(camera_model.at(0));
     z_ = z;
     offsets_ = offsets;
     data_ = data;
@@ -61,7 +61,7 @@ struct GroundPlaneError
     return true;
   }
 
-  static ceres::CostFunction* Create(Camera3dModel* camera_model,
+  static ceres::CostFunction* Create(const std::vector<ChainModel*> &camera_model,
                                      double z ,
                                      CalibrationOffsetParser* offsets,
                                      robot_calibration_msgs::CalibrationData& data)
@@ -84,7 +84,7 @@ struct GroundPlaneError
 
     ceres::DynamicNumericDiffCostFunction<GroundPlaneError> * func;
     func = new ceres::DynamicNumericDiffCostFunction<GroundPlaneError>(
-                    new GroundPlaneError(camera_model, offsets, data, z));
+                    new GroundPlaneError(camera_model, z, offsets, data));
     func->AddParameterBlock(offsets->size());
     func->SetNumResiduals(data.observations[index].features.size());
 

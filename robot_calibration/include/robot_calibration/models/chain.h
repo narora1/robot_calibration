@@ -129,7 +129,12 @@ public:
   virtual std::vector<geometry_msgs::PointStamped> project_(
     const robot_calibration_msgs::CalibrationData& data,
     const CalibrationOffsetParser& offsets);
- 
+
+  virtual std::vector<geometry_msgs::PointStamped> inv_project(
+    const robot_calibration_msgs::CalibrationData& data,
+    std::vector<geometry_msgs::PointStamped> arm_pts,
+    const CalibrationOffsetParser& offsets);
+
   /**
    *  \brief Compute the forward kinematics of the chain, based on the
    *         offsets and the joint positions of the state message.

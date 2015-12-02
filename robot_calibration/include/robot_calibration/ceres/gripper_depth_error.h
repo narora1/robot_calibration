@@ -33,13 +33,13 @@ namespace robot_calibration
 
 struct GripperDepthError
 {
-  GripperDepthError(Camera3dModel* camera_model,
-                    ChainModel* arm_model,
+  GripperDepthError(const std::vector<ChainModel*> &camera_model,
+                    const std::vector<ChainModel*> &arm_model,
                     CalibrationOffsetParser* offsets,
                     robot_calibration_msgs::CalibrationData& data)
   {
-    camera_model_ = camera_model;
-    arm_model_ = arm_model;
+    camera_model_ = dynamic_cast<Camera3dModel*>(camera_model.at(0));
+    arm_model_ = arm_model.at(0);
     offsets_ = offsets;
     data_ = data;
   }
@@ -125,8 +125,8 @@ struct GripperDepthError
     return true;
   }
 
-  static ceres::CostFunction* Create(Camera3dModel* camera_model,
-                                     ChainModel* arm_model,
+  static ceres::CostFunction* Create(const std::vector<ChainModel*> &camera_model,
+                                     const std::vector<ChainModel*> &arm_model,
                                      CalibrationOffsetParser* offsets,
                                      robot_calibration_msgs::CalibrationData& data)
   {

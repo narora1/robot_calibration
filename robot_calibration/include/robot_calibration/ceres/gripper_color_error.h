@@ -42,12 +42,12 @@ struct GripperColorError
    *  \param free_param_info Helper container for processing the free parameters.
    *  \param data The calibration data collected
    */
-  GripperColorError(Camera2dModel* camera_model,
-                    ChainModel* arm_model,
+  GripperColorError(const std::vector<ChainModel*> &camera_model,
+                    const std::vector<ChainModel*> &arm_model,
                     CalibrationOffsetParser* offsets,
                     robot_calibration_msgs::CalibrationData& data)
   {
-    camera_model_ = camera_model;
+    camera_model_ = dynamic_cast<Camera2dModel*>(camera_model.at(0));
     arm_model_ = arm_model;
     offsets_ = offsets;
     data_ = data;
@@ -68,11 +68,14 @@ struct GripperColorError
 
     // Project the arm estimation
     std::vector<geometry_msgs::PointStamped> arm_pts =
-        arm_model_->project_(data_, *offsets_);
+        arm_model_.at(0)->project_(data_, *offsets_);
+
+    std::vector<geometry_msgs::PointStamped> cam_pts =
+       arm_model_.at(1)->inv_project(data_, arm_pts, *offsets_);
 
     // Project the camera observations
     std::vector<geometry_msgs::PointStamped> camera_pts =
-        camera_model_->project_(data_, arm_pts, *offsets_);
+        camera_model_->project_(data_, cam_pts, *offsets_);
 
     // Compute residuals
     for (size_t i = 0; i < camera_pts.size(); ++i)
@@ -92,8 +95,8 @@ struct GripperColorError
    *  \tparam num_free_params The number of free parameters being used for
    *          joint and link calibration.
    */
-  static ceres::CostFunction* Create(Camera2dModel* camera_model,
-                                     ChainModel* arm_model,
+  static ceres::CostFunction* Create(const std::vector<ChainModel*> &camera_model,
+                                     const std::vector<ChainModel*> &arm_model,
                                      CalibrationOffsetParser* offsets,
                                      robot_calibration_msgs::CalibrationData& data)
   {
@@ -123,7 +126,7 @@ struct GripperColorError
   }
 
   Camera2dModel * camera_model_;
-  ChainModel * arm_model_;
+  std::vector<ChainModel *> arm_model_;
   CalibrationOffsetParser * offsets_;
   robot_calibration_msgs::CalibrationData data_;
 };

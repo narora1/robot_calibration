@@ -43,7 +43,7 @@ struct OptimizationParams
     std::string name;
     std::string type;
     bool inv;
-    XmlRpc::XmlRpcValue params;
+    XmlRpc::XmlRpcValue chain;
   };
 
   struct Params

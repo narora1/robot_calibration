@@ -80,27 +80,93 @@ int Optimizer::optimize(OptimizationParams& params,
   // Create models
   for (size_t i = 0; i < params.models.size(); ++i)
   {
+    std::vector<ChainModel*> vec;
     if (params.models[i].type == "chain")
     {
       ROS_INFO_STREAM("Creating chain '" << params.models[i].name << "' from " <<
                                             params.base_link << " to " <<
                                             params.models[i].params["frame"]);
       ChainModel* model = new ChainModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"]);
-      models_[params.models[i].name] = model;
+//      models_[params.models[i].name] = (model);
+      std::map<std::string, std::vector<ChainModel*> >::iterator it = models_.find(params.models[i].name) ;
+        if ( it == models_.end() )
+        {
+            vec.push_back(model);
+        }
+        else
+        {
+            vec = it->second;
+            vec.push_back(model);
+        }
+        
+        models_[params.models[i].name] = vec;
+ 
     }
     else if (params.models[i].type == "camera3d")
     {
       ROS_INFO_STREAM("Creating camera3d '" << params.models[i].name << "' in frame " <<
                                                params.models[i].params["frame"]);
       Camera3dModel* model = new Camera3dModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"]);
-      models_[params.models[i].name] = model;
+      //models_[params.models[i].name].push_back(model);
+      std::map<std::string, std::vector<ChainModel*> >::iterator it = models_.find(params.models[i].name) ;
+        if ( it == models_.end() )
+        {
+            vec.push_back(model);
+        }
+        else
+        {
+            vec = it->second;
+            vec.push_back(model);
+        }
+        
+        models_[params.models[i].name] = vec;
     }
     else if (params.models[i].type == "camera2d")
     {
       ROS_INFO_STREAM("Creating camera2d '" << params.models[i].name << "' in frame " <<
           params.models[i].params["frame"]);
       Camera2dModel* model = new Camera2dModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"]);
-      models_[params.models[i].name] = model;
+     // models_[params.models[i].name].push_back(model);
+      std::map<std::string, std::vector<ChainModel*> >::iterator it = models_.find(params.models[i].name) ;
+        if ( it == models_.end() )
+        {
+            vec.push_back(model);
+        }
+        else
+        {
+            vec = it->second;
+            vec.push_back(model);
+        }
+        
+        models_[params.models[i].name] = vec;
+    }
+    else if (params.models[i].type == "multichain")
+    {
+      std::cout << "hi" << std::endl;
+      std::cout << params.models[i].chains.size() << std::endl;
+    /*  ROS_INFO_STREAM("Creating two chains '" << params.models[i].chains[0].name << "' from " <<
+                                            params.base_link << " to " <<
+                                            params.models[i].chains[0].params["frame"] << "and '" << 
+                                            params.models[i].chains[1].name << "' from " <<
+                                            params.base_link << " to " <<
+                                            params.models[i].chains[1].params["frame"]);
+     */ for( size_t j = 0; j < params.models[i].chains.size(); j++)
+      {
+        ChainModel* model = new ChainModel(params.models[i].chains[j].name, tree_, params.base_link, params.models[i].params["frame"]);//chains[j].params["frame"]);
+       // models_[params.models[i].name].push_back(model);
+        std::map<std::string, std::vector<ChainModel*> >::iterator it = models_.find(params.models[i].name) ;
+        if ( it == models_.end() )
+        {
+            vec.push_back(model);
+        }
+        else
+        {
+            vec = it->second;
+            vec.push_back(model);
+        }
+        
+        models_[params.models[i].name] = vec;
+      }
     }
     else
     {
@@ -156,8 +222,8 @@ int Optimizer::optimize(OptimizationParams& params,
 
         // Create the block
         ceres::CostFunction * cost = Camera3dToArmError::Create(
-            dynamic_cast<Camera3dModel*>(models_[camera_name]),
-            models_[arm_name],
+            //dynamic_cast<Camera3dModel*>(models_[camera_name]),
+            models_[camera_name], models_[arm_name],
             offsets_.get(), data[i]);
 
         int index = -1;
@@ -209,8 +275,8 @@ int Optimizer::optimize(OptimizationParams& params,
 
         // Create the block
         ceres::CostFunction * cost = GroundPlaneError::Create(
-          dynamic_cast<Camera3dModel*>(models_[camera_name]),
-          z_,
+          //dynamic_cast<Camera3dModel*>(models_[camera_name]),
+          models_[camera_name], z_,
           offsets_.get(), data[i]);
 
         int index = -1;
@@ -260,8 +326,8 @@ int Optimizer::optimize(OptimizationParams& params,
 
         // Create the block
         ceres::CostFunction * cost = GripperDepthError::Create(
-            dynamic_cast<Camera3dModel*>(models_[camera_name]),
-            models_[gripper_name],
+            //dynamic_cast<Camera3dModel*>(models_[camera_name]),
+            models_[camera_name], models_[gripper_name],
             offsets_.get(), data[i]);
 
         int index = -1;
@@ -317,8 +383,8 @@ int Optimizer::optimize(OptimizationParams& params,
 
         // Create the block
         ceres::CostFunction * cost = GripperColorError::Create(
-            dynamic_cast<Camera2dModel*>(models_[camera_name]),
-            models_[gripper_name],
+            //dynamic_cast<Camera2dModel*>(models_[camera_name]),
+            models_[camera_name], models_[gripper_name],
             offsets_.get(), data[i]);
 
         int index = -1;

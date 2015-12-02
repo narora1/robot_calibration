@@ -79,6 +79,25 @@ bool OptimizationParams::LoadFromROS(ros::NodeHandle& nh)
       Params params;
       params.name = static_cast<std::string>(model_params[i]["name"]);
       params.type = static_cast<std::string>(model_params[i]["type"]);
+      //params.chains = model_params[i]["chains"];
+      if (model_params[i].hasMember("chains"))
+      { //std::cout <<"here" << std::endl;
+        //models[i].chains.clear();
+        std::cout << "here" << std::endl;
+        XmlRpc::XmlRpcValue chains_ = model_params[i]["chains"];
+      //nh.getParam("chians", chain);
+      std::cout << chains_.size() << std::endl;
+        for(int j = 0; j < chains_.size(); j++)
+        {
+          Chains chain;
+          chain.name = static_cast<std::string>(chains_[j]["name"]);
+          chain.type = static_cast<std::string>(chains_[j]["type"]);
+          chain.inv = static_cast<bool>(chains_[j]["inv"]);
+          chain.chain = chains_[j];
+                 
+         
+        }  
+      }
       params.params = model_params[i];
       models.push_back(params);
     }

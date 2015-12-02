@@ -288,7 +288,7 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project_(
     points[i].point.y = p.p.y();
     points[i].point.z = p.p.z();
   }
-
+/*
   KDL::Frame fk1 = getChainFKcam(offsets, data.joint_states);
 
   for (size_t i = 0; i < points.size(); ++i)
@@ -306,10 +306,39 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project_(
     points[i].point.y = p.p.y();
     points[i].point.z = p.p.z();
   }
-
+*/
   return points;
 }
 
+std::vector<geometry_msgs::PointStamped> ChainModel::inv_project(
+    const robot_calibration_msgs::CalibrationData& data,
+    std::vector<geometry_msgs::PointStamped> arm_pts,
+    const CalibrationOffsetParser& offsets)
+{
+    std::vector<geometry_msgs::PointStamped> points;
+  
+    // Resize to match # of features
+    points.resize(arm_pts.size());
+
+    KDL::Frame fk1 = getChainFKcam(offsets, data.joint_states);
+    KDL::Frame fk;
+  for (size_t i = 0; i < points.size(); ++i)
+  {
+    KDL::Frame p(KDL::Frame::Identity());
+    p.p.x(arm_pts[i].point.x);
+    p.p.y(arm_pts[i].point.y);
+    p.p.z(arm_pts[i].point.z);
+
+    fk = fk1.Inverse();
+    p = fk * p;
+
+    points[i].header.frame_id = "head_camera_rgb_optical_frame";
+    points[i].point.x = p.p.x();
+    points[i].point.y = p.p.y();
+    points[i].point.z = p.p.z();
+}
+return points;
+}
 KDL::Frame ChainModel::getChainFKcam(const CalibrationOffsetParser& offsets,
     const sensor_msgs::JointState& state)
 {

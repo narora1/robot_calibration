@@ -28,6 +28,7 @@
 #include <geometry_msgs/PointStamped.h>
 #include <sensor_msgs/JointState.h>
 #include <robot_calibration_msgs/CalibrationData.h>
+#include <robot_calibration/models/model.h>
 
 /** \brief Calibration code lives under this namespace */
 namespace robot_calibration
@@ -104,7 +105,7 @@ namespace robot_calibration
  *   - The Z-offset from the gripper frame to the first observation point is -50mm
  *  The checkboard points are numberered so that the lowest Z value are the first points
  */
-class ChainModel
+class ChainMode :public Model
 {
 public:
   /**

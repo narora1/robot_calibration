@@ -339,6 +339,93 @@ KDL::Frame ChainModel::getChainFKcam(const CalibrationOffsetParser& offsets,
   }
   return p_out;
 }
+/*
+MultiChainModel::MultiChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip) :
+  ChainModel(name, model, root, tip)
+{
+  // TODO add additional parameters for unprojecting observations using initial parameters
+  // 
+}
+
+
+std::vector<geometry_msgs::PointStamped> MultiChainModel::project(
+    const robot_calibration_msgs::CalibrationData& data,
+    const CalibrationOffsetParser& offsets)
+{
+  std::vector<geometry_msgs::PointStamped> points;
+
+  // Determine which observation to use
+  int sensor_idx = -1;
+  for (size_t obs = 0; obs < data.observations.size(); obs++)
+  {
+    if (data.observations[obs].sensor_name == name_)
+    {
+      sensor_idx = obs;
+      break;
+    }
+  }
+
+  if (sensor_idx < 0)
+  {
+    // TODO: any sort of error message?
+    return points;
+  }
+
+
+  
+  
+  // Resize to match # of features
+  points.resize(data.observations[sensor_idx].features.size());
+
+  KDL::Frame fk = getChainFK(offsets, data.joint_states);
+
+  for (size_t i = 0; i < points.size(); ++i)
+  {
+    points[i].header.frame_id = "base_link";
+
+    KDL::Frame p(KDL::Frame::Identity());
+    p.p.x(data.observations[sensor_idx].features[i].point.x);
+    p.p.y(data.observations[sensor_idx].features[i].point.y);
+    p.p.z(data.observations[sensor_idx].features[i].point.z);
+
+    // if there is a frame attached to the tip-- basically for checkerboard
+    if (data.observations[sensor_idx].features[i].header.frame_id != tip_)
+    {
+      KDL::Frame p2(KDL::Frame::Identity());
+      if (offsets.getFrame(data.observations[sensor_idx].features[i].header.frame_id, p2))
+      {
+        p = p2 * p;
+      }
+    } 
+
+    p = fk * p;
+
+    points[i].point.x = p.p.x();
+    points[i].point.y = p.p.y();
+    points[i].point.z = p.p.z();
+  }
+
+  KDL::Frame fk1 = getChainFKcam(offsets, data.joint_states);
+
+  for (size_t i = 0; i < points.size(); ++i)
+  {
+    KDL::Frame p(KDL::Frame::Identity());
+    p.p.x(points[i].point.x);
+    p.p.y(points[i].point.y);
+    p.p.z(points[i].point.z);
+
+    fk = fk1.Inverse();
+    p = fk * p;
+
+    points[i].header.frame_id = "head_camera_rgb_optical_frame";
+    points[i].point.x = p.p.x();
+    points[i].point.y = p.p.y();
+    points[i].point.z = p.p.z();
+  }
+
+  return points;
+}
+*/
 
 Camera2dModel::Camera2dModel(const std::string& name, KDL::Tree model, std::string root, std::string tip) :
   ChainModel(name, model, root, tip)

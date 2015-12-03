@@ -102,6 +102,27 @@ int Optimizer::optimize(OptimizationParams& params,
       Camera2dModel* model = new Camera2dModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"]);
       models_[params.models[i].name] = model;
     }
+    else if (params.models[i].type == "multichain")
+    {
+       ROS_INFO_STREAM("Creating multichain '" << params.models[i].name );
+       //MultiChainModel * model = 
+       std::cout << params.models[i].params["chains"].size() << std::endl;
+       //std::cout << params.models[i].params["chains"].["name"] << std::endl;
+       XmlRpc::XmlRpcValue chains_ = params.models[i].params["chains"];
+       for(int j = 0; j < chains_.size(); j++)
+       {
+         //MultiChainModel* model = new MultiChainModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"]);
+         //std::cout << static_cast<std::string>(chains_[j]["name"]) << std::endl;
+         std::string name_ = static_cast<std::string>(chains_[j]["name"]) ;
+         std::string frame_ = static_cast<std::string>(chains_[j]["frame"]);
+         bool inv_ = chains_[j]["inv"];
+         MultiChainModel* model =( new MultiChainModel(name_, tree_, params.base_link, frame_, inv_));
+
+       }
+         
+
+       }
+    }
     else
     {
       // ERROR unknown

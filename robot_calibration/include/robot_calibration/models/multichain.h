@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-// Author: Niharika Arora
 
-#ifndef ROBOT_CALIBRATION_MODELS_CAMERA2D_H
-#define ROBOT_CALIBRATION_MODELS_CAMERA2D_H
+#ifndef ROBOT_CALIBRATION_MODELS_MULTICHAIN_H
+#define ROBOT_CALIBRATION_MODELS_MULTICHAIN_H
 
 #include <robot_calibration/camera_info.h>
 #include <robot_calibration/models/chain.h>
@@ -28,7 +27,7 @@ namespace robot_calibration
 /**
  *  \brief Model of a camera on a kinematic chain.
  */
-class Camera2dModel : public Model
+class MultiChainModel : public Model
 {
 public:
   /**
@@ -38,18 +37,19 @@ public:
    *         models used for error modeling. Usually 'base_link'.
    *  \param tip The tip of the chain.
    */
-  Camera2dModel(const std::string& name, KDL::Tree model, std::string root, std::string tip);
-  virtual ~Camera2dModel() {}
+  MultiChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip);
+  virtual ~MultiChainModel() {}
 
   /**
    *  \brief Compute the updated positions of the observed points
    */
-  virtual std::vector<geometry_msgs::PointStamped> project_(
-    const robot_calibration_msgs::CalibrationData& data, 
-    std::vector<geometry_msgs::PointStamped> arm_pts,
+  virtual std::vector<geometry_msgs::PointStamped> project(
+    const robot_calibration_msgs::CalibrationData& data,
     const CalibrationOffsetParser& offsets);
+
+
 };
 
 }  // namespace robot_calibration
 
-#endif  // ROBOT_CALIBRATION_MODELS_CAMERA2D_H
+#endif  // ROBOT_CALIBRATION_MODELS_MULTICHAIN_H

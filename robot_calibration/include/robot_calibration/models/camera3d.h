@@ -20,7 +20,8 @@
 #define ROBOT_CALIBRATION_MODELS_CAMERA3D_H
 
 #include <robot_calibration/camera_info.h>
-#include <robot_calibration/models/chain.h>
+//#include <robot_calibration/models/chain.h>
+#include <robot_calibration/models/model.h>
 
 namespace robot_calibration
 {
@@ -28,7 +29,7 @@ namespace robot_calibration
 /**
  *  \brief Model of a camera on a kinematic chain.
  */
-class Camera3dModel : public ChainModel
+class Camera3dModel : public Model
 {
 public:
   /**

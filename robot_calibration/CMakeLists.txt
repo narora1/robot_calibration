@@ -73,7 +73,8 @@ add_executable(calibrate_base src/calibrate_base.cpp)
 target_link_libraries(calibrate_base ${Boost_LIBRARIES}
                                      ${catkin_LIBRARIES})
 
-add_library(robot_calibration src/calibration_offset_parser.cpp
+add_library(robot_calibration src/models.cpp
+                              src/calibration_offset_parser.cpp
                               src/chain_manager.cpp
                               src/checkerboard_finder.cpp
                               src/feature_finder.cpp
@@ -81,9 +82,9 @@ add_library(robot_calibration src/calibration_offset_parser.cpp
                               src/ground_plane_finder.cpp	
                               src/gripper_depth_finder.cpp  
                               src/gripper_color_finder.cpp
-                              src/models.cpp
                               src/optimization_params.cpp
                               src/optimizer.cpp)
+
 target_link_libraries(robot_calibration ${Boost_LIBRARIES}
                                         ${catkin_LIBRARIES}
                                         ${CERES_LIBRARIES}
@@ -100,7 +101,7 @@ target_link_libraries(calibrate robot_calibration
                                 ${orocos_kdl_LIBRARIES})
 add_dependencies(calibrate robot_calibration)
 
-add_subdirectory(test)
+#add_subdirectory(test)
 
 install(DIRECTORY include/ DESTINATION include)
 

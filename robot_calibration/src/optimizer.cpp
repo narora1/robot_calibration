@@ -35,6 +35,8 @@
 #include <robot_calibration/models/camera3d.h>
 #include <robot_calibration/models/camera2d.h>
 #include <robot_calibration/models/chain.h>
+#include <robot_calibration/models/model.h>
+#include <robot_calibration/models/multichain.h>
 #include <boost/shared_ptr.hpp>
 #include <string>
 #include <map>
@@ -85,21 +87,21 @@ int Optimizer::optimize(OptimizationParams& params,
       ROS_INFO_STREAM("Creating chain '" << params.models[i].name << "' from " <<
                                             params.base_link << " to " <<
                                             params.models[i].params["frame"]);
-      ChainModel* model = new ChainModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"]);
+      ChainModel* model = new ChainModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"], 0);
       models_[params.models[i].name] = model;
     }
     else if (params.models[i].type == "camera3d")
     {
       ROS_INFO_STREAM("Creating camera3d '" << params.models[i].name << "' in frame " <<
                                                params.models[i].params["frame"]);
-      Camera3dModel* model = new Camera3dModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"]);
+      Camera3dModel* model = new Camera3dModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"], 0);
       models_[params.models[i].name] = model;
     }
     else if (params.models[i].type == "camera2d")
     {
       ROS_INFO_STREAM("Creating camera2d '" << params.models[i].name << "' in frame " <<
           params.models[i].params["frame"]);
-      Camera2dModel* model = new Camera2dModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"]);
+      Camera2dModel* model = new Camera2dModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"], 0);
       models_[params.models[i].name] = model;
     }
     else if (params.models[i].type == "multichain")
@@ -118,11 +120,12 @@ int Optimizer::optimize(OptimizationParams& params,
          bool inv_ = chains_[j]["inv"];
          MultiChainModel* model =( new MultiChainModel(name_, tree_, params.base_link, frame_, inv_));
 
+         model->chain.push_back(model);
        }
          
 
-       }
     }
+    
     else
     {
       // ERROR unknown
@@ -178,7 +181,7 @@ int Optimizer::optimize(OptimizationParams& params,
         // Create the block
         ceres::CostFunction * cost = Camera3dToArmError::Create(
             dynamic_cast<Camera3dModel*>(models_[camera_name]),
-            models_[arm_name],
+            dynamic_cast<ChainModel*>(models_[arm_name]),
             offsets_.get(), data[i]);
 
         int index = -1;
@@ -282,7 +285,7 @@ int Optimizer::optimize(OptimizationParams& params,
         // Create the block
         ceres::CostFunction * cost = GripperDepthError::Create(
             dynamic_cast<Camera3dModel*>(models_[camera_name]),
-            models_[gripper_name],
+            dynamic_cast<ChainModel*>(models_[gripper_name]),
             offsets_.get(), data[i]);
 
         int index = -1;
@@ -339,7 +342,7 @@ int Optimizer::optimize(OptimizationParams& params,
         // Create the block
         ceres::CostFunction * cost = GripperColorError::Create(
             dynamic_cast<Camera2dModel*>(models_[camera_name]),
-            models_[gripper_name],
+            dynamic_cast<ChainModel*>(models_[gripper_name]),
             offsets_.get(), data[i]);
 
         int index = -1;

@@ -39,7 +39,7 @@ public:
    *         models used for error modeling. Usually 'base_link'.
    *  \param tip The tip of the chain.
    */
-  Camera3dModel(const std::string& name, KDL::Tree model, std::string root, std::string tip);
+  Camera3dModel(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv);
   virtual ~Camera3dModel() {}
 
   /**

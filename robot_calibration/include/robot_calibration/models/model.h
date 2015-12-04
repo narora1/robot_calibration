@@ -35,23 +35,22 @@ class Model
 {
 public:
   Model(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv);
-    virtual ~Model() {}
+
+  virtual ~Model() {}
  
   virtual std::vector<geometry_msgs::PointStamped> project(
     const robot_calibration_msgs::CalibrationData& data,
-    const CalibrationOffsetParser& offsets);  
+    const CalibrationOffsetParser& offsets)  = 0;  
 
   KDL::Frame getChainFK(const CalibrationOffsetParser& offsets,
                         const sensor_msgs::JointState& state);
 
-/*
-private:
   KDL::Chain chain_;
 
 protected:
   std::string root_;
   std::string tip_;
-  std::string name_; */
+  std::string name_; 
 };
 
 /** \brief Converts our angle-axis-with-integrated-magnitude representation to a KDL::Rotation */

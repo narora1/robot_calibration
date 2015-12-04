@@ -105,7 +105,7 @@ namespace robot_calibration
  *   - The Z-offset from the gripper frame to the first observation point is -50mm
  *  The checkboard points are numberered so that the lowest Z value are the first points
  */
-class ChainMode :public Model
+class ChainModel : public Model
 {
 public:
   /**
@@ -115,7 +115,7 @@ public:
    *         models used for error modeling. Usually 'base_link'.
    *  \param tip The tip of the chain.
    */
-  ChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip);
+  ChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv);
   virtual ~ChainModel() {}
 
   /**
@@ -141,6 +141,8 @@ public:
 
   KDL::Frame getChainFKcam(const CalibrationOffsetParser& offsets,
                            const sensor_msgs::JointState& state);
+
+/*
 private:
   KDL::Chain chain_;
   KDL::Chain chaincam_;
@@ -148,6 +150,7 @@ protected:
   std::string root_;
   std::string tip_;
   std::string name_;
+*/
 };
 
 /** \brief Converts our angle-axis-with-integrated-magnitude representation to a KDL::Rotation */

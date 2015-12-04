@@ -37,8 +37,10 @@ public:
    *         models used for error modeling. Usually 'base_link'.
    *  \param tip The tip of the chain.
    */
-  MultiChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip);
+  MultiChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv);
   virtual ~MultiChainModel() {}
+
+  std::vector<Model*> chain;
 
   /**
    *  \brief Compute the updated positions of the observed points

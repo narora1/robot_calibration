@@ -17,6 +17,7 @@
 
 // Author: Michael Ferguson
 
+#include <robot_calibration/models/model.h>
 #include <robot_calibration/models/chain.h>
 #include <robot_calibration/models/camera3d.h>
 #include <robot_calibration/models/camera2d.h>
@@ -38,14 +39,19 @@ double positionFromMsg(const std::string& name,
   return 0.0;
 }
 
-ChainModel::ChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip) :
-    root_(root), tip_(tip), name_(name)
+Model::Model(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv)
+{
+}
+
+
+ChainModel::ChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv) :
+    Model (name, model, root, tip, inv)
 {
   // Create a KDL::Chain
   if (!model.getChain(root, tip, chain_))
     std::cerr << "Failed to get chain" << std::endl;
-  if (!model.getChain(root, "head_camera_rgb_optical_frame", chaincam_))
-    std::cerr << "Failed to get chain" << std::endl;
+//  if (!model.getChain(root, "head_camera_rgb_optical_frame", chaincam_))
+//    std::cerr << "Failed to get chain" << std::endl;
 }
 
 std::vector<geometry_msgs::PointStamped> ChainModel::project(
@@ -78,7 +84,7 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project(
 
   for (size_t i = 0; i < points.size(); ++i)
   {
-    points[i].header.frame_id = root_;  // fk returns point in root_ frame
+    points[i].header.frame_id = this->root_;  // fk returns point in root_ frame
 
     KDL::Frame p(KDL::Frame::Identity());
     p.p.x(data.observations[sensor_idx].features[i].point.x);
@@ -135,8 +141,8 @@ KDL::Frame ChainModel::getChainFK(const CalibrationOffsetParser& offsets,
   return p_out;
 }
 
-Camera3dModel::Camera3dModel(const std::string& name, KDL::Tree model, std::string root, std::string tip) :
-    ChainModel(name, model, root, tip)
+Camera3dModel::Camera3dModel(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv) :
+    Model(name, model, root, tip, inv)
 {
   // TODO add additional parameters for unprojecting observations using initial parameters
 }
@@ -151,7 +157,7 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
   int sensor_idx = -1;
   for (size_t obs = 0; obs < data.observations.size(); obs++)
   {
-    if (data.observations[obs].sensor_name == name_)
+    if (data.observations[obs].sensor_name == this->name_)
     {
       sensor_idx = obs;
       break;
@@ -230,7 +236,7 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
     points[i].point.x = pt.p.x();
     points[i].point.y = pt.p.y();
     points[i].point.z = pt.p.z();
-    points[i].header.frame_id = root_;
+    points[i].header.frame_id = this->root_;
   }
 
   return points;
@@ -289,7 +295,7 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project_(
     points[i].point.z = p.p.z();
   }
 
-  KDL::Frame fk1 = getChainFKcam(offsets, data.joint_states);
+  KDL::Frame fk1 = getChainFK(offsets, data.joint_states);
 
   for (size_t i = 0; i < points.size(); ++i)
   {
@@ -309,7 +315,7 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project_(
 
   return points;
 }
-
+/*
 KDL::Frame ChainModel::getChainFKcam(const CalibrationOffsetParser& offsets,
     const sensor_msgs::JointState& state)
 {
@@ -338,7 +344,7 @@ KDL::Frame ChainModel::getChainFKcam(const CalibrationOffsetParser& offsets,
     }
   }
   return p_out;
-}
+}*/
 /*
 MultiChainModel::MultiChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip) :
   ChainModel(name, model, root, tip)
@@ -427,8 +433,8 @@ std::vector<geometry_msgs::PointStamped> MultiChainModel::project(
 }
 */
 
-Camera2dModel::Camera2dModel(const std::string& name, KDL::Tree model, std::string root, std::string tip) :
-  ChainModel(name, model, root, tip)
+Camera2dModel::Camera2dModel(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv) :
+  Model(name, model, root, tip, inv)
 {
   // TODO add additional parameters for unprojecting observations using initial parameters
   // 

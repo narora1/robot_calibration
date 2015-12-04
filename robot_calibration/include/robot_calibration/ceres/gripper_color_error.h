@@ -68,7 +68,7 @@ struct GripperColorError
 
     // Project the arm estimation
     std::vector<geometry_msgs::PointStamped> arm_pts =
-        arm_model_->project_(data_, *offsets_);
+        arm_model_->project(data_, *offsets_);
 
     // Project the camera observations
     std::vector<geometry_msgs::PointStamped> camera_pts =

@@ -52,7 +52,7 @@ GripperDepthFinder::GripperDepthFinder(ros::NodeHandle & nh) :
   camera_info_sub_ = nh.subscribe<sensor_msgs::CameraInfo>(
       "/head_camera/depth/camera_info",
       10, &GripperDepthFinder::cameraInfoCallback, this);
-  publisher_ = nh.advertise<robot_calibration_msgs::Plane>("plane_depth", 10);
+  //publisher_ = nh.advertise<robot_calibration_msgs::Plane>("plane_depth", 10);
   if (!depth_camera_manager_.init(nh))
   {
     // Error will be printed in manager

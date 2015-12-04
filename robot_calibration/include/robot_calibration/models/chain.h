@@ -123,20 +123,21 @@ public:
    *  \param data The calibration data for this observation.
    *  \param offsets The offsets that the solver wants to examine.
    */
-  virtual std::vector<geometry_msgs::PointStamped> project(
+  std::vector<geometry_msgs::PointStamped> project(
     const robot_calibration_msgs::CalibrationData& data,
     const CalibrationOffsetParser& offsets);
+  
+  std::vector<geometry_msgs::PointStamped> project_(
+    const robot_calibration_msgs::CalibrationData& data,
+    std::vector<geometry_msgs::PointStamped> arm_pts,
+    const CalibrationOffsetParser& offsets) {};
 
-  virtual std::vector<geometry_msgs::PointStamped> project_(
-    const robot_calibration_msgs::CalibrationData& data,
-    const CalibrationOffsetParser& offsets);
- 
   /**
    *  \brief Compute the forward kinematics of the chain, based on the
    *         offsets and the joint positions of the state message.
    */
-  KDL::Frame getChainFK(const CalibrationOffsetParser& offsets,
-                        const sensor_msgs::JointState& state);
+//  KDL::Frame getChainFK(const CalibrationOffsetParser& offsets,
+//                        const sensor_msgs::JointState& state);
 
 
   KDL::Frame getChainFKcam(const CalibrationOffsetParser& offsets,

@@ -28,7 +28,7 @@
 #include <geometry_msgs/PointStamped.h>
 #include <robot_calibration_msgs/CalibrationData.h>
 #include <robot_calibration_msgs/GripperLedCommandAction.h>
-#include <robot_calibration_msgs/Plane.h>
+//#include <robot_calibration_msgs/Plane.h>
 #include <actionlib/client/simple_action_client.h>
 
 namespace robot_calibration

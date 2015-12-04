@@ -42,6 +42,12 @@ public:
     const robot_calibration_msgs::CalibrationData& data,
     const CalibrationOffsetParser& offsets)  = 0;  
 
+  virtual std::vector<geometry_msgs::PointStamped> project_(
+    const robot_calibration_msgs::CalibrationData& data,
+    std::vector<geometry_msgs::PointStamped> arm_pts,
+    const CalibrationOffsetParser& offsets) = 0;
+
+
   KDL::Frame getChainFK(const CalibrationOffsetParser& offsets,
                         const sensor_msgs::JointState& state);
 

@@ -21,6 +21,7 @@
 #include <robot_calibration/models/chain.h>
 #include <robot_calibration/models/camera3d.h>
 #include <robot_calibration/models/camera2d.h>
+#include <robot_calibration/models/multichain.h>
 
 namespace robot_calibration
 {
@@ -111,7 +112,8 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project(
   return points;
 }
 
-KDL::Frame ChainModel::getChainFK(const CalibrationOffsetParser& offsets,
+
+KDL::Frame Model::getChainFK(const CalibrationOffsetParser& offsets,
                                   const sensor_msgs::JointState& state)
 {
   // FK from root to tip
@@ -241,7 +243,7 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
 
   return points;
 }
-std::vector<geometry_msgs::PointStamped> ChainModel::project_(
+/*std::vector<geometry_msgs::PointStamped> ChainModel::project(
     const robot_calibration_msgs::CalibrationData& data,
     const CalibrationOffsetParser& offsets)
 {
@@ -314,7 +316,7 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project_(
   }
 
   return points;
-}
+}*/
 /*
 KDL::Frame ChainModel::getChainFKcam(const CalibrationOffsetParser& offsets,
     const sensor_msgs::JointState& state)
@@ -345,14 +347,13 @@ KDL::Frame ChainModel::getChainFKcam(const CalibrationOffsetParser& offsets,
   }
   return p_out;
 }*/
-/*
-MultiChainModel::MultiChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip) :
-  ChainModel(name, model, root, tip)
+
+MultiChainModel::MultiChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv) :
+  Model(name, model, root, tip, inv)
 {
   // TODO add additional parameters for unprojecting observations using initial parameters
   // 
 }
-
 
 std::vector<geometry_msgs::PointStamped> MultiChainModel::project(
     const robot_calibration_msgs::CalibrationData& data,
@@ -376,7 +377,8 @@ std::vector<geometry_msgs::PointStamped> MultiChainModel::project(
     // TODO: any sort of error message?
     return points;
   }
-
+}
+/*
 
   
   
@@ -524,6 +526,7 @@ std::vector<geometry_msgs::PointStamped> Camera2dModel::project_(
 
   return points;
 }
+
 KDL::Rotation rotation_from_axis_magnitude(const double x, const double y, const double z)
 {
   double magnitude = sqrt(x*x + y*y + z*z);

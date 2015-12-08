@@ -40,7 +40,7 @@ double positionFromMsg(const std::string& name,
   return 0.0;
 }
 
-Model::Model(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv)
+Model::Model(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv): root_(root), tip_(tip), name_(name)
 {
 }
 
@@ -49,6 +49,7 @@ ChainModel::ChainModel(const std::string& name, KDL::Tree model, std::string roo
     Model (name, model, root, tip, inv)
 {
   // Create a KDL::Chain
+  std::cout << "name" << name << std::endl;
   if (!model.getChain(root, tip, chain_))
     std::cerr << "Failed to get chain" << std::endl;
 //  if (!model.getChain(root, "head_camera_rgb_optical_frame", chaincam_))
@@ -60,13 +61,13 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project(
     const CalibrationOffsetParser& offsets)
 {
   std::vector<geometry_msgs::PointStamped> points;
-
+ // std::cout << "here" << std::endl;
   // Determine which observation to use
   int sensor_idx = -1;
   for (size_t obs = 0; obs < data.observations.size(); obs++)
-  {
+  {  //std::cout << data.observations.size() << "\t" << name_ << std::endl;
     if (data.observations[obs].sensor_name == name_)
-    {
+    { //std::cout << data.observations[obs].sensor_name << "\t" << name_ << std::endl;
       sensor_idx = obs;
       break;
     }
@@ -77,7 +78,7 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project(
     // TODO: any sort of error message?
     return points;
   }
-
+// std::cout << "here1" << std::endl;
   // Resize to match # of features
   points.resize(data.observations[sensor_idx].features.size());
 
@@ -124,7 +125,7 @@ KDL::Frame Model::getChainFK(const CalibrationOffsetParser& offsets,
   {
     std::string name = chain_.getSegment(i).getJoint().getName();
     KDL::Frame correction;
-
+    //std::cout << name << std::endl;
     // Apply any frame calibration
     if (offsets.getFrame(name, correction))
       p_out = p_out * correction;
@@ -159,7 +160,7 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
   int sensor_idx = -1;
   for (size_t obs = 0; obs < data.observations.size(); obs++)
   {
-    if (data.observations[obs].sensor_name == this->name_)
+    if (data.observations[obs].sensor_name == name_)
     {
       sensor_idx = obs;
       break;
@@ -238,7 +239,7 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
     points[i].point.x = pt.p.x();
     points[i].point.y = pt.p.y();
     points[i].point.z = pt.p.z();
-    points[i].header.frame_id = this->root_;
+    points[i].header.frame_id = root_;
   }
 
   return points;

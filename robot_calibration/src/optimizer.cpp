@@ -104,7 +104,7 @@ int Optimizer::optimize(OptimizationParams& params,
       Camera2dModel* model = new Camera2dModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"], 0);
       models_[params.models[i].name] = model;
     }
-    else if (params.models[i].type == "multichain")
+/*    else if (params.models[i].type == "multichain")
     {
        ROS_INFO_STREAM("Creating multichain '" << params.models[i].name );
        //MultiChainModel * model = 
@@ -125,7 +125,7 @@ int Optimizer::optimize(OptimizationParams& params,
          
 
     }
-    
+  */  
     else
     {
       // ERROR unknown
@@ -139,7 +139,7 @@ int Optimizer::optimize(OptimizationParams& params,
     offsets_->add(params.free_params[i]);
   }
   for (size_t i = 0; i < params.free_frames.size(); ++i)
-  {
+  { //std::cout << params.free_frames.size() << std::endl;
     offsets_->addFrame(params.free_frames[i].name,
                        params.free_frames[i].x,
                        params.free_frames[i].y,

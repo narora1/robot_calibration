@@ -26,6 +26,7 @@
 #include <robot_calibration/models/camera3d.h>
 #include <robot_calibration/models/chain.h>
 #include <robot_calibration_msgs/CalibrationData.h>
+#include <robot_calibration/models/model.h>
 
 namespace robot_calibration
 {
@@ -66,6 +67,7 @@ struct Camera3dToArmError
     // Update calibration offsets based on free params
     offsets_->update(free_params[0]);
 
+    //std::cout << data_.observations[0].features[0].point.x << std::endl;
     // Project the camera observations
     std::vector<geometry_msgs::PointStamped> camera_pts =
         camera_model_->project(data_, *offsets_);
@@ -74,6 +76,7 @@ struct Camera3dToArmError
     std::vector<geometry_msgs::PointStamped> arm_pts =
         arm_model_->project(data_, *offsets_);
 
+    //std::cout << "in camera 3d to arm error" << std::endl;
     if (camera_pts.size() != arm_pts.size())
     {
       std::cerr << "Camera observation does not match arm estimation in size." << std::endl;

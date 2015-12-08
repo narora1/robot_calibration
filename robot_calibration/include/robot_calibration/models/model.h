@@ -54,6 +54,7 @@ public:
   KDL::Chain chain_;
 
 protected:
+//private:
   std::string root_;
   std::string tip_;
   std::string name_; 

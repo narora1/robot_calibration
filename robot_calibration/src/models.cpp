@@ -82,11 +82,13 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project(
   // Resize to match # of features
   points.resize(data.observations[sensor_idx].features.size());
 
+  //std::cout << chain_.getNrOfSegments() << std::endl;
+
   KDL::Frame fk = getChainFK(offsets, data.joint_states);
 
   for (size_t i = 0; i < points.size(); ++i)
   {
-    points[i].header.frame_id = this->root_;  // fk returns point in root_ frame
+    points[i].header.frame_id = root_;  // fk returns point in root_ frame
 
     KDL::Frame p(KDL::Frame::Identity());
     p.p.x(data.observations[sensor_idx].features[i].point.x);
@@ -148,6 +150,10 @@ Camera3dModel::Camera3dModel(const std::string& name, KDL::Tree model, std::stri
     Model(name, model, root, tip, inv)
 {
   // TODO add additional parameters for unprojecting observations using initial parameters
+  std::cout << name << "\t"  << root << "\t" << tip << std::endl;
+   if (!model.getChain(root, tip, chain_))
+         std::cerr << "Failed to get chain" << std::endl;
+
 }
 
 std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
@@ -210,7 +216,8 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
   double new_z_scaling = 1.0 + offsets.get(name_+"_z_scaling");
 
   points.resize(data.observations[sensor_idx].features.size());
-
+ 
+  //std::cout << chain_.getNrOfSegments() << std::endl;
   // Get position of camera frame
   KDL::Frame fk = getChainFK(offsets, data.joint_states);
 

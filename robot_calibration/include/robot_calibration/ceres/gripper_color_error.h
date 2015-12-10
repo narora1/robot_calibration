@@ -25,6 +25,8 @@
 #include <robot_calibration/models/camera3d.h>
 #include <robot_calibration/models/camera2d.h>
 #include <robot_calibration/models/chain.h>
+#include <robot_calibration/models/model.h>
+#include <robot_calibration/models/multichain.h>
 #include <robot_calibration_msgs/CalibrationData.h>
 
 namespace robot_calibration
@@ -43,7 +45,7 @@ struct GripperColorError
    *  \param data The calibration data collected
    */
   GripperColorError(Camera2dModel* camera_model,
-                    ChainModel* arm_model,
+                    MultiChainModel* arm_model,
                     CalibrationOffsetParser* offsets,
                     robot_calibration_msgs::CalibrationData& data)
   {
@@ -66,17 +68,20 @@ struct GripperColorError
     // Update calibration offsets based on free params
     offsets_->update(free_params[0]);
 
+ //   std::cout << "in operator" << std::endl;
     // Project the arm estimation
+//    std::cout << arm_model_ << std::endl;
     std::vector<geometry_msgs::PointStamped> arm_pts =
         arm_model_->project(data_, *offsets_);
-
+// std::cout << "after projection" << std::endl;
     // Project the camera observations
     std::vector<geometry_msgs::PointStamped> camera_pts =
         camera_model_->project_(data_, arm_pts, *offsets_);
-
+  //  std::cout << "after cam projection " << std::endl;
     // Compute residuals
     for (size_t i = 0; i < camera_pts.size(); ++i)
     {
+//      std::cout << data_.observations[0].features[i].point.x << "\t" << data_.observations[0].features[i].point.y << "\t" << data_.observations[0].features[i].point.z << std::endl;
       residuals[(2*i)+0] = camera_pts[i].point.x - data_.observations[0].features[i].point.y;
       residuals[(2*i)+1] = camera_pts[i].point.y - data_.observations[0].features[i].point.x;
     }
@@ -93,7 +98,7 @@ struct GripperColorError
    *          joint and link calibration.
    */
   static ceres::CostFunction* Create(Camera2dModel* camera_model,
-                                     ChainModel* arm_model,
+                                     MultiChainModel* arm_model,
                                      CalibrationOffsetParser* offsets,
                                      robot_calibration_msgs::CalibrationData& data)
   {
@@ -123,7 +128,7 @@ struct GripperColorError
   }
 
   Camera2dModel * camera_model_;
-  ChainModel * arm_model_;
+  MultiChainModel * arm_model_;
   CalibrationOffsetParser * offsets_;
   robot_calibration_msgs::CalibrationData data_;
 };

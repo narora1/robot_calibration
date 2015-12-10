@@ -53,11 +53,22 @@ public:
 
   KDL::Chain chain_;
 
+  const std::string &getName() const
+  {
+    return name_;
+  }
+
+  bool getInv() const
+  {
+    return inv_;
+  }
+
 protected:
 //private:
   std::string root_;
   std::string tip_;
   std::string name_; 
+  bool inv_;
 };
 
 /** \brief Converts our angle-axis-with-integrated-magnitude representation to a KDL::Rotation */

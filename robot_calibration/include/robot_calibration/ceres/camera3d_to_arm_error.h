@@ -116,6 +116,7 @@ struct Camera3dToArmError
         break;
       }
     }
+
     if (index == -1)
     {
       std::cerr << "Sensor name doesn't match any of the existing finders" << std::endl;

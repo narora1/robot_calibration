@@ -36,6 +36,7 @@ double positionFromMsg(const std::string& name,
   }
 
   std::cerr << "Unable to find " << name << " in sensor_msgs::JointState" << std::endl;
+  
   return 0.0;
 }
 
@@ -57,6 +58,7 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project(
     const CalibrationOffsetParser& offsets)
 {
   std::vector<geometry_msgs::PointStamped> points;
+  
   // Determine which observation to use
   int sensor_idx = -1;
   for (size_t obs = 0; obs < data.observations.size(); obs++)
@@ -73,6 +75,7 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project(
     // TODO: any sort of error message?
     return points;
   }
+
   // Resize to match # of features
   points.resize(data.observations[sensor_idx].features.size());
 
@@ -429,9 +432,9 @@ KDL::Rotation rotation_from_axis_magnitude(const double x, const double y, const
     return KDL::Rotation::Quaternion(0.0, 0.0, 0.0, 1.0);
 
   return KDL::Rotation::Quaternion(x/magnitude * sin(magnitude/2.0),
-      y/magnitude * sin(magnitude/2.0),
-      z/magnitude * sin(magnitude/2.0),
-      cos(magnitude/2.0));
+                                   y/magnitude * sin(magnitude/2.0),
+                                   z/magnitude * sin(magnitude/2.0),
+                                   cos(magnitude/2.0));
 }
 
 void axis_magnitude_from_rotation(const KDL::Rotation& r, double& x, double& y, double& z)

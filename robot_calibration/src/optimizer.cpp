@@ -57,8 +57,8 @@ Optimizer::~Optimizer()
 // Determine if a sample of data has an observation from
 // the desired sensor
 bool hasSensor(
-    const robot_calibration_msgs::CalibrationData& msg,
-    const std::string& sensor)
+  const robot_calibration_msgs::CalibrationData& msg,
+  const std::string& sensor)
 {
   for (size_t i = 0; i < msg.observations.size(); i++)
   {
@@ -69,8 +69,8 @@ bool hasSensor(
 }
 
 int Optimizer::optimize(OptimizationParams& params,
-    std::vector<robot_calibration_msgs::CalibrationData> data,
-    bool progress_to_stdout)
+                        std::vector<robot_calibration_msgs::CalibrationData> data,
+                        bool progress_to_stdout)
 {
   // Load KDL from URDF
   if (!kdl_parser::treeFromUrdfModel(model_, tree_))
@@ -214,8 +214,8 @@ int Optimizer::optimize(OptimizationParams& params,
         }
 
         problem->AddResidualBlock(cost,
-            NULL,  // squared loss
-            free_params);
+                                  NULL,  // squared loss
+                                  free_params);
       }
       else if (params.error_blocks[j].type =="camera3d_to_ground")
       {
@@ -228,9 +228,9 @@ int Optimizer::optimize(OptimizationParams& params,
 
         // Create the block
         ceres::CostFunction * cost = GroundPlaneError::Create(
-            dynamic_cast<Camera3dModel*>(models_[camera_name]),
-            z_,
-            offsets_.get(), data[i]);
+          dynamic_cast<Camera3dModel*>(models_[camera_name]),
+          z_,
+          offsets_.get(), data[i]);
 
         int index = -1;
         for (size_t k =0; k < data[i].observations.size() ; k++)
@@ -263,8 +263,8 @@ int Optimizer::optimize(OptimizationParams& params,
         }
 
         problem->AddResidualBlock(cost,
-            NULL /* squared loss */,
-            free_params);
+                                  NULL /* squared loss */,
+                                  free_params);
       }
       else if (params.error_blocks[j].type =="camera3d_to_gripper")
       {

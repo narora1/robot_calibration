@@ -56,7 +56,7 @@ public:
    *        from bag file, or loaded over some topic subscriber.
    * @param progress_to_stdout If true, Ceres optimizer will output info to
    *        stdout.
-  */
+   */
   int optimize(OptimizationParams& params,
                std::vector<robot_calibration_msgs::CalibrationData> data,
                bool progress_to_stdout = false);

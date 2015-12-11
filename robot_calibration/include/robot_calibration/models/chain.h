@@ -126,32 +126,11 @@ public:
   std::vector<geometry_msgs::PointStamped> project(
     const robot_calibration_msgs::CalibrationData& data,
     const CalibrationOffsetParser& offsets);
-  
+
   std::vector<geometry_msgs::PointStamped> project_(
     const robot_calibration_msgs::CalibrationData& data,
     std::vector<geometry_msgs::PointStamped> arm_pts,
     const CalibrationOffsetParser& offsets) {};
-
-  /**
-   *  \brief Compute the forward kinematics of the chain, based on the
-   *         offsets and the joint positions of the state message.
-   */
-//  KDL::Frame getChainFK(const CalibrationOffsetParser& offsets,
-//                        const sensor_msgs::JointState& state);
-
-
-//  KDL::Frame getChainFKcam(const CalibrationOffsetParser& offsets,
-//                           const sensor_msgs::JointState& state);
-
-/*
-private:
-  KDL::Chain chain_;
-  KDL::Chain chaincam_;
-protected:
-  std::string root_;
-  std::string tip_;
-  std::string name_;
-*/
 };
 
 /** \brief Converts our angle-axis-with-integrated-magnitude representation to a KDL::Rotation */

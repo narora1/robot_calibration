@@ -63,25 +63,22 @@ struct GripperColorError
    *  \param residuals The residuals computed, to be returned to the optimizer.
    */
   bool operator()(double const * const * free_params,
-                  double* residuals) const
+      double* residuals) const
   {
     // Update calibration offsets based on free params
     offsets_->update(free_params[0]);
 
- //   std::cout << "in operator" << std::endl;
     // Project the arm estimation
-//    std::cout << arm_model_ << std::endl;
     std::vector<geometry_msgs::PointStamped> arm_pts =
         arm_model_->project(data_, *offsets_);
-// std::cout << "after projection" << std::endl;
+
     // Project the camera observations
     std::vector<geometry_msgs::PointStamped> camera_pts =
         camera_model_->project_(data_, arm_pts, *offsets_);
-  //  std::cout << "after cam projection " << std::endl;
+
     // Compute residuals
     for (size_t i = 0; i < camera_pts.size(); ++i)
     {
-//      std::cout << data_.observations[0].features[i].point.x << "\t" << data_.observations[0].features[i].point.y << "\t" << data_.observations[0].features[i].point.z << std::endl;
       residuals[(2*i)+0] = camera_pts[i].point.x - data_.observations[0].features[i].point.y;
       residuals[(2*i)+1] = camera_pts[i].point.y - data_.observations[0].features[i].point.x;
     }

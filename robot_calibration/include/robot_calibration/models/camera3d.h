@@ -20,7 +20,6 @@
 #define ROBOT_CALIBRATION_MODELS_CAMERA3D_H
 
 #include <robot_calibration/camera_info.h>
-//#include <robot_calibration/models/chain.h>
 #include <robot_calibration/models/model.h>
 
 namespace robot_calibration
@@ -53,7 +52,6 @@ public:
     const robot_calibration_msgs::CalibrationData& data,
     std::vector<geometry_msgs::PointStamped> arm_pts,
     const CalibrationOffsetParser& offsets) {};
-
 };
 
 

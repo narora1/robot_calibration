@@ -37,10 +37,10 @@ public:
   Model(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv);
 
   virtual ~Model() {}
- 
+
   virtual std::vector<geometry_msgs::PointStamped> project(
     const robot_calibration_msgs::CalibrationData& data,
-    const CalibrationOffsetParser& offsets)  = 0;  
+    const CalibrationOffsetParser& offsets)  = 0;
 
   virtual std::vector<geometry_msgs::PointStamped> project_(
     const robot_calibration_msgs::CalibrationData& data,
@@ -64,10 +64,9 @@ public:
   }
 
 protected:
-//private:
   std::string root_;
   std::string tip_;
-  std::string name_; 
+  std::string name_;
   bool inv_;
 };
 

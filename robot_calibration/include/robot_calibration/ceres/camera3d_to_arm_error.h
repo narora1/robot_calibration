@@ -67,7 +67,6 @@ struct Camera3dToArmError
     // Update calibration offsets based on free params
     offsets_->update(free_params[0]);
 
-    //std::cout << data_.observations[0].features[0].point.x << std::endl;
     // Project the camera observations
     std::vector<geometry_msgs::PointStamped> camera_pts =
         camera_model_->project(data_, *offsets_);
@@ -76,7 +75,6 @@ struct Camera3dToArmError
     std::vector<geometry_msgs::PointStamped> arm_pts =
         arm_model_->project(data_, *offsets_);
 
-    //std::cout << "in camera 3d to arm error" << std::endl;
     if (camera_pts.size() != arm_pts.size())
     {
       std::cerr << "Camera observation does not match arm estimation in size." << std::endl;
@@ -118,7 +116,6 @@ struct Camera3dToArmError
         break;
       }
     }
-    
     if (index == -1)
     {
       std::cerr << "Sensor name doesn't match any of the existing finders" << std::endl;

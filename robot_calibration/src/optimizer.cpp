@@ -57,8 +57,8 @@ Optimizer::~Optimizer()
 // Determine if a sample of data has an observation from
 // the desired sensor
 bool hasSensor(
-  const robot_calibration_msgs::CalibrationData& msg,
-  const std::string& sensor)
+    const robot_calibration_msgs::CalibrationData& msg,
+    const std::string& sensor)
 {
   for (size_t i = 0; i < msg.observations.size(); i++)
   {
@@ -69,8 +69,8 @@ bool hasSensor(
 }
 
 int Optimizer::optimize(OptimizationParams& params,
-                        std::vector<robot_calibration_msgs::CalibrationData> data,
-                        bool progress_to_stdout)
+    std::vector<robot_calibration_msgs::CalibrationData> data,
+    bool progress_to_stdout)
 {
   // Load KDL from URDF
   if (!kdl_parser::treeFromUrdfModel(model_, tree_))
@@ -100,42 +100,27 @@ int Optimizer::optimize(OptimizationParams& params,
     else if (params.models[i].type == "camera2d")
     {
       ROS_INFO_STREAM("Creating camera2d '" << params.models[i].name << "' in frame " <<
-          params.models[i].params["frame"]);
+                                               params.models[i].params["frame"]);
       Camera2dModel* model = new Camera2dModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"], 0);
       models_[params.models[i].name] = model;
     }
     else if (params.models[i].type == "multichain")
     {
-       ROS_INFO_STREAM("Creating multichain '" << params.models[i].name );
-       //MultiChainModel * model = 
-       //std::cout << params.models[i].params["chains"].size() << std::endl;
-       //std::cout << params.models[i].params["chains"].["name"] << std::endl;
-       XmlRpc::XmlRpcValue chains_ = params.models[i].params["chains"];
-       //std::string name_ = cast<std::string>(chains_[j]["name"]) ;
-       //std::string frame_ = static_cast<std::string>(chains_[j]["frame"]);
-       //                bool inv_ = chains_[j]["inv"];
+      ROS_INFO_STREAM("Creating multichain '" << params.models[i].name);
+      XmlRpc::XmlRpcValue chains_ = params.models[i].params["chains"];
 
-       MultiChainModel* models = ( new MultiChainModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"] , 0));
-       for(int j = 0; j < chains_.size(); j++)
-       {
-         //MultiChainModel* model = new MultiChainModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"]);
-//         //std::cout << static_cast<std::string>(chains_[j]["name"]) << std::endl;
-         std::string name_ = static_cast<std::string>(chains_[j]["name"]) ;
-         std::string frame_ = static_cast<std::string>(chains_[j]["frame"]);
-         bool inv_ = chains_[j]["inv"];
-         std::cout << "MULTICHAIN " << name_ << "  " << inv_ << std::endl;
-         //std::cout << "model chian size" << models->chain.size() << std::endl;
-         //std::cout << inv_ << std::endl;
-         MultiChainModel* model =( new MultiChainModel(name_, tree_, params.base_link, frame_, inv_));
+      MultiChainModel* models = ( new MultiChainModel(params.models[i].name, tree_, params.base_link, params.models[i].params["frame"] , 0));
+      for (int j = 0; j < chains_.size(); j++)
+      {
+        std::string name_ = static_cast<std::string>(chains_[j]["name"]);
+        std::string frame_ = static_cast<std::string>(chains_[j]["frame"]);
+        bool inv_ = chains_[j]["inv"];
+        MultiChainModel* model =( new MultiChainModel(name_, tree_, params.base_link, frame_, inv_));
 
-         std::cout << "   model " << model->getName() << "  " << int(model->getInv()) << " : " << model->getInv() << std::endl;
-         //std::cout << "..." << std::endl;
-         models->chain.push_back(model);
-         //std::cout << "....." << std::endl;
-         //std::cout << "model chian size" << models->chain.size() << std::endl;
-       }
-        models_[params.models[i].name] = models;
-    }   
+        models->chain.push_back(model);
+      }
+      models_[params.models[i].name] = models;
+    }
     else
     {
       // ERROR unknown
@@ -149,7 +134,7 @@ int Optimizer::optimize(OptimizationParams& params,
     offsets_->add(params.free_params[i]);
   }
   for (size_t i = 0; i < params.free_frames.size(); ++i)
-  { //std::cout << params.free_frames.size() << std::endl;
+  {
     offsets_->addFrame(params.free_frames[i].name,
                        params.free_frames[i].x,
                        params.free_frames[i].y,
@@ -197,14 +182,14 @@ int Optimizer::optimize(OptimizationParams& params,
         int index = -1;
         for (size_t k =0; k < data[i].observations.size() ; k++)
         {
-           if (data[i].observations[k].sensor_name == camera_name)
+          if (data[i].observations[k].sensor_name == camera_name)
           {
             index = k;
             break;
           }
         }
 
-        if(index == -1)
+        if (index == -1)
         {
           std::cerr << "Sensor name doesn't exist" << std::endl;
           return 0;
@@ -229,8 +214,8 @@ int Optimizer::optimize(OptimizationParams& params,
         }
 
         problem->AddResidualBlock(cost,
-                                  NULL,  // squared loss
-                                  free_params);
+            NULL,  // squared loss
+            free_params);
       }
       else if (params.error_blocks[j].type =="camera3d_to_ground")
       {
@@ -243,9 +228,9 @@ int Optimizer::optimize(OptimizationParams& params,
 
         // Create the block
         ceres::CostFunction * cost = GroundPlaneError::Create(
-          dynamic_cast<Camera3dModel*>(models_[camera_name]),
-          z_,
-          offsets_.get(), data[i]);
+            dynamic_cast<Camera3dModel*>(models_[camera_name]),
+            z_,
+            offsets_.get(), data[i]);
 
         int index = -1;
         for (size_t k =0; k < data[i].observations.size() ; k++)
@@ -256,8 +241,8 @@ int Optimizer::optimize(OptimizationParams& params,
             break;
           }
         }
-        
-        if(index == -1)
+
+        if (index == -1)
         {
           std::cerr << "Sensor name doesn't exist" << std::endl;
           return 0;
@@ -278,8 +263,8 @@ int Optimizer::optimize(OptimizationParams& params,
         }
 
         problem->AddResidualBlock(cost,
-                                  NULL /* squared loss */,
-                                  free_params);
+            NULL /* squared loss */,
+            free_params);
       }
       else if (params.error_blocks[j].type =="camera3d_to_gripper")
       {
@@ -288,7 +273,7 @@ int Optimizer::optimize(OptimizationParams& params,
 
         // Check that this sample has the required features/observations
         if (!hasSensor(data[i], camera_name) || !hasSensor(data[i], gripper_name))
-        { 
+        {
           continue;
         }
 
@@ -301,14 +286,14 @@ int Optimizer::optimize(OptimizationParams& params,
         int index = -1;
         for (size_t k = 0; k < data[i].observations.size() ; k++)
         {
-            if ( data[i].observations[k].sensor_name == camera_name)
-            {
-             index = k;
-             break;
-            }
+          if ( data[i].observations[k].sensor_name == camera_name)
+          {
+            index = k;
+            break;
+          }
         }
 
-        if(index == -1)
+        if (index == -1)
         {
           std::cerr << "Sensor name doesn't exist" << std::endl;
           return 0;
@@ -319,19 +304,18 @@ int Optimizer::optimize(OptimizationParams& params,
           double ** params = new double*[1];
           params[0] = free_params;
           double * residuals = new double[data[i].observations[index].features.size() * 3];  // TODO: should check that all features are same length?
-          
+
           cost->Evaluate(params, residuals, NULL);
-    /*                  std::cout << "INITIAL COST (" << i << ")" << std::endl << "  x: ";
-                      for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
-                      std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 0)];
-                      std::cout << std::endl << "  y: ";
-                      for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
-                      std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 1)];
-                      std::cout << std::endl << "  z: ";
-                      for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
-                      std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 2)];
-                      std::cout << std::endl << std::endl;
-      */     
+          std::cout << "INITIAL COST (" << i << ")" << std::endl << "  x: ";
+          for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
+            std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 0)];
+          std::cout << std::endl << "  y: ";
+          for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
+            std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 1)];
+          std::cout << std::endl << "  z: ";
+          for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
+            std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 2)];
+          std::cout << std::endl << std::endl;
         }
 
         problem->AddResidualBlock(cost,
@@ -340,11 +324,9 @@ int Optimizer::optimize(OptimizationParams& params,
       }
       else if (params.error_blocks[j].type =="camera3d_to_led")
       {
-        //std::cout << "in camera3dtoled" << std::endl;
         std::string camera_name = static_cast<std::string>(params.error_blocks[j].params["camera"]);
         std::string gripper_name = static_cast<std::string>(params.error_blocks[j].params["gripper"]);
- 
-        //std::cout << camera_name << "\t" << gripper_name << std::endl;
+
         // Check that this sample has the required features/observations
         if (!hasSensor(data[i], camera_name) || !hasSensor(data[i], gripper_name))
         {
@@ -361,37 +343,32 @@ int Optimizer::optimize(OptimizationParams& params,
         for (size_t k =0; k < data[i].observations.size() ; k++)
         {
           if (data[i].observations[k].sensor_name == camera_name)
-            {
-             index = k;
-             break;
-            }
-
+          {
+            index = k;
+            break;
+          }
         }
 
-        if(index == -1)
+        if (index == -1)
         {
           std::cerr << "Sensor name doesn't exist" << std::endl;
           return 0;
         }
- 
+
         if (progress_to_stdout)
         {
           double ** params = new double*[1];
           params[0] = free_params;
           double * residuals = new double[data[i].observations[index].features.size() * 2];
-          
+
           cost->Evaluate(params, residuals, NULL);
-         /*             std::cout << "INITIAL COST (" << i << ")" << std::endl << "  x: ";
-                      for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
-                      std::cout << "  " << std::setw(10) << std::fixed << residuals[(2*k + 0)];
-                      std::cout << std::endl << "  y: ";
-                      for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
-                      std::cout << "  " << std::setw(10) << std::fixed << residuals[(2*k + 1)];
-                      //std::cout << std::endl << "  z: ";
-                      //for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
-                      //std::cout << "  " << std::setw(10) << std::fixed << residuals[(3*k + 2)];
-                      std::cout << std::endl << std::endl;
-           */
+          std::cout << "INITIAL COST (" << i << ")" << std::endl << "  x: ";
+          for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
+            std::cout << "  " << std::setw(10) << std::fixed << residuals[(2*k + 0)];
+          std::cout << std::endl << "  y: ";
+          for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
+            std::cout << "  " << std::setw(10) << std::fixed << residuals[(2*k + 1)];
+          std::cout << std::endl << std::endl;
         }
 
         problem->AddResidualBlock(cost,
@@ -403,10 +380,10 @@ int Optimizer::optimize(OptimizationParams& params,
         // Outrageous error block requires no particular sensors, add to every sample
         problem->AddResidualBlock(
             OutrageousError::Create(offsets_.get(),
-              params.error_blocks[j].name,
-              static_cast<double>(params.error_blocks[j].params["joint_scale"]),
-              static_cast<double>(params.error_blocks[j].params["position_scale"]),
-              static_cast<double>(params.error_blocks[j].params["rotation_scale"])),
+                                    params.error_blocks[j].name,
+                                    static_cast<double>(params.error_blocks[j].params["joint_scale"]),
+                                    static_cast<double>(params.error_blocks[j].params["position_scale"]),
+                                    static_cast<double>(params.error_blocks[j].params["rotation_scale"])),
             NULL, // squared loss
             free_params);
       }

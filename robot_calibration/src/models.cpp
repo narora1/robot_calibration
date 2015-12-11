@@ -36,7 +36,6 @@ double positionFromMsg(const std::string& name,
   }
 
   std::cerr << "Unable to find " << name << " in sensor_msgs::JointState" << std::endl;
-
   return 0.0;
 }
 
@@ -46,14 +45,11 @@ Model::Model(const std::string& name, KDL::Tree model, std::string root, std::st
 
 
 ChainModel::ChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv) :
-    Model (name, model, root, tip, inv)
+    Model(name, model, root, tip, inv)
 {
   // Create a KDL::Chain
- // std::cout << "name" << name << std::endl;
   if (!model.getChain(root, tip, chain_))
     std::cerr << "Failed to get chain" << std::endl;
-//  if (!model.getChain(root, "head_camera_rgb_optical_frame", chaincam_))
-//    std::cerr << "Failed to get chain" << std::endl;
 }
 
 std::vector<geometry_msgs::PointStamped> ChainModel::project(
@@ -61,13 +57,12 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project(
     const CalibrationOffsetParser& offsets)
 {
   std::vector<geometry_msgs::PointStamped> points;
- // std::cout << "here" << std::endl;
   // Determine which observation to use
   int sensor_idx = -1;
   for (size_t obs = 0; obs < data.observations.size(); obs++)
-  {  //std::cout << data.observations.size() << "\t" << name_ << std::endl;
+  {
     if (data.observations[obs].sensor_name == name_)
-    { //std::cout << data.observations[obs].sensor_name << "\t" << name_ << std::endl;
+    {
       sensor_idx = obs;
       break;
     }
@@ -78,11 +73,8 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project(
     // TODO: any sort of error message?
     return points;
   }
-// std::cout << "here1" << std::endl;
   // Resize to match # of features
   points.resize(data.observations[sensor_idx].features.size());
-
-  //std::cout << chain_.getNrOfSegments() << std::endl;
 
   KDL::Frame fk = getChainFK(offsets, data.joint_states);
 
@@ -115,19 +107,18 @@ std::vector<geometry_msgs::PointStamped> ChainModel::project(
   return points;
 }
 
-
 KDL::Frame Model::getChainFK(const CalibrationOffsetParser& offsets,
-                                  const sensor_msgs::JointState& state)
+                             const sensor_msgs::JointState& state)
 {
   // FK from root to tip
   KDL::Frame p_out = KDL::Frame::Identity();
-//std::cout << chain_.getNrOfSegments() << std::endl;
+
   // Step through joints
   for (size_t i = 0; i < chain_.getNrOfSegments(); ++i)
   {
     std::string name = chain_.getSegment(i).getJoint().getName();
     KDL::Frame correction;
-  //std::cout << name << std::endl;
+
     // Apply any frame calibration
     if (offsets.getFrame(name, correction))
       p_out = p_out * correction;
@@ -150,10 +141,8 @@ Camera3dModel::Camera3dModel(const std::string& name, KDL::Tree model, std::stri
     Model(name, model, root, tip, inv)
 {
   // TODO add additional parameters for unprojecting observations using initial parameters
-  //std::cout << name << "\t"  << root << "\t" << tip << std::endl;
-   if (!model.getChain(root, tip, chain_))
-         std::cerr << "Failed to get chain" << std::endl;
-
+  if (!model.getChain(root, tip, chain_))
+    std::cerr << "Failed to get chain" << std::endl;
 }
 
 std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
@@ -216,8 +205,7 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
   double new_z_scaling = 1.0 + offsets.get(name_+"_z_scaling");
 
   points.resize(data.observations[sensor_idx].features.size());
- 
-  //std::cout << chain_.getNrOfSegments() << std::endl;
+
   // Get position of camera frame
   KDL::Frame fk = getChainFK(offsets, data.joint_states);
 
@@ -231,7 +219,7 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
     // Unproject through parameters stored at runtime
     double u = x * camera_fx / z + camera_cx;
     double v = y * camera_fy / z + camera_cy;
-    double depth = z/z_scaling - z_offset;
+    double depth = z / z_scaling - z_offset;
 
     KDL::Frame pt(KDL::Frame::Identity());
 
@@ -251,120 +239,13 @@ std::vector<geometry_msgs::PointStamped> Camera3dModel::project(
 
   return points;
 }
-/*std::vector<geometry_msgs::PointStamped> ChainModel::project(
-    const robot_calibration_msgs::CalibrationData& data,
-    const CalibrationOffsetParser& offsets)
-{
-  std::vector<geometry_msgs::PointStamped> points;
-
-  // Determine which observation to use
-  int sensor_idx = -1;
-  for (size_t obs = 0; obs < data.observations.size(); obs++)
-  {
-    if (data.observations[obs].sensor_name == name_)
-    {
-      sensor_idx = obs;
-      break;
-    }
-  }
-
-  if (sensor_idx < 0)
-  {
-    // TODO: any sort of error message?
-    return points;
-  }
-
-  // Resize to match # of features
-  points.resize(data.observations[sensor_idx].features.size());
-
-  KDL::Frame fk = getChainFK(offsets, data.joint_states);
-
-  for (size_t i = 0; i < points.size(); ++i)
-  {
-    points[i].header.frame_id = "base_link";
-
-    KDL::Frame p(KDL::Frame::Identity());
-    p.p.x(data.observations[sensor_idx].features[i].point.x);
-    p.p.y(data.observations[sensor_idx].features[i].point.y);
-    p.p.z(data.observations[sensor_idx].features[i].point.z);
-
-    // if there is a frame attached to the tip-- basically for checkerboard
-    if (data.observations[sensor_idx].features[i].header.frame_id != tip_)
-    {
-      KDL::Frame p2(KDL::Frame::Identity());
-      if (offsets.getFrame(data.observations[sensor_idx].features[i].header.frame_id, p2))
-      {
-        p = p2 * p;
-      }
-    } 
-
-    p = fk * p;
-
-    points[i].point.x = p.p.x();
-    points[i].point.y = p.p.y();
-    points[i].point.z = p.p.z();
-  }
-
-  KDL::Frame fk1 = getChainFK(offsets, data.joint_states);
-
-  for (size_t i = 0; i < points.size(); ++i)
-  {
-    KDL::Frame p(KDL::Frame::Identity());
-    p.p.x(points[i].point.x);
-    p.p.y(points[i].point.y);
-    p.p.z(points[i].point.z);
-
-    fk = fk1.Inverse();
-    p = fk * p;
-
-    points[i].header.frame_id = "head_camera_rgb_optical_frame";
-    points[i].point.x = p.p.x();
-    points[i].point.y = p.p.y();
-    points[i].point.z = p.p.z();
-  }
-
-  return points;
-}*/
-/*
-KDL::Frame ChainModel::getChainFKcam(const CalibrationOffsetParser& offsets,
-    const sensor_msgs::JointState& state)
-{
-  // FK from root to tip
-  KDL::Frame p_out = KDL::Frame::Identity();
-
-  // Step through joints
-  for (size_t i = 0; i < chaincam_.getNrOfSegments(); ++i)
-  {
-    std::string name = chaincam_.getSegment(i).getJoint().getName();
-    KDL::Frame correction;
-
-    // Apply any frame calibration
-    if (offsets.getFrame(name, correction))
-      p_out = p_out * correction;
-
-    // Apply any joint offset calibration
-    if (chaincam_.getSegment(i).getJoint().getType() != KDL::Joint::None)
-    {
-      double p = positionFromMsg(name, state) + offsets.get(name);
-      p_out = p_out * chaincam_.getSegment(i).pose(p);
-    }
-    else
-    {
-      p_out = p_out * chaincam_.getSegment(i).pose(0.0);
-    }
-  }
-  return p_out;
-}*/
 
 MultiChainModel::MultiChainModel(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv) :
-  Model(name, model, root, tip, inv)
+    Model(name, model, root, tip, inv)
 {
   // TODO add additional parameters for unprojecting observations using initial parameters
-  //
-//  std::cout << name << "\t" << root << "\t" << tip << "/t" << inv << std::endl;
   if (!model.getChain(root, tip, chain_))
-         std::cerr << "Failed to get chain" << std::endl;
- 
+    std::cerr << "Failed to get chain" << std::endl;
 }
 
 std::vector<geometry_msgs::PointStamped> MultiChainModel::project(
@@ -372,7 +253,7 @@ std::vector<geometry_msgs::PointStamped> MultiChainModel::project(
     const CalibrationOffsetParser& offsets)
 {
   std::vector<geometry_msgs::PointStamped> points;
-//  std::cout << "here" << std::endl;
+
   // Determine which observation to use
   int sensor_idx = -1;
   for (size_t obs = 0; obs < data.observations.size(); obs++)
@@ -390,57 +271,44 @@ std::vector<geometry_msgs::PointStamped> MultiChainModel::project(
     return points;
   }
 
- // std::cout << name_ << "\t" << root_ << "\t" << tip_ << std::endl;
-  //std::string frame_ = static_cast<std::string>(model->chain
-  //std::cout << chain.size() << std::endl; 
-  
-//  std::cout << chain[0]->getName() << std::endl;
-//std::cout << "hi" << std::endl;
   points.resize(data.observations[sensor_idx].features.size());
 
-//std::cout << chain.size() << std::endl;
-  for(size_t j = 0; j<chain.size(); j++)
+  for (size_t j = 0; j < chain.size(); j++)
   {
     if (chain[j]->getInv() == 0)
     {
-      //points.resize(data.observations[sensor_idx].features.size());
       KDL::Frame fk = chain[j]->getChainFK(offsets, data.joint_states);
-      //std::cout << name_ << "\t" << root_ << "\t" << tip_ << std::endl;
-      //std::cout << chain[j]->getName() <<std::endl;
 
       for (size_t i = 0; i < points.size(); ++i)
       {
-      points[i].header.frame_id = "base_link";
+        points[i].header.frame_id = "base_link";
 
-      KDL::Frame p(KDL::Frame::Identity());
-      p.p.x(data.observations[sensor_idx].features[i].point.x);
-      p.p.y(data.observations[sensor_idx].features[i].point.y);
-      p.p.z(data.observations[sensor_idx].features[i].point.z);
+        KDL::Frame p(KDL::Frame::Identity());
+        p.p.x(data.observations[sensor_idx].features[i].point.x);
+        p.p.y(data.observations[sensor_idx].features[i].point.y);
+        p.p.z(data.observations[sensor_idx].features[i].point.z);
 
-      // if there is a frame attached to the tip-- basically for checkerboard
-/*      if (data.observations[sensor_idx].features[i].header.frame_id != tip_)
-      {
-        KDL::Frame p2(KDL::Frame::Identity());
-        if (offsets.getFrame(data.observations[sensor_idx].features[i].header.frame_id, p2))
+        // if there is a frame attached to the tip-- basically for checkerboard
+        if (data.observations[sensor_idx].features[i].header.frame_id != tip_)
         {
-          p = p2 * p;
+          KDL::Frame p2(KDL::Frame::Identity());
+          if (offsets.getFrame(data.observations[sensor_idx].features[i].header.frame_id, p2))
+          {
+            p = p2 * p;
+          }
         }
-      } 
-*/
-      p = fk * p;
+        p = fk * p;
 
-      points[i].point.x = p.p.x();
-      points[i].point.y = p.p.y();
-      points[i].point.z = p.p.z();
+        points[i].point.x = p.p.x();
+        points[i].point.y = p.p.y();
+        points[i].point.z = p.p.z();
       }
-     
     }
-    //if(chain[j]->getInv() == 1)
     else
     {
       KDL::Frame fk = chain[j]->getChainFK(offsets, data.joint_states);
       KDL::Frame fk1 = chain[j]->getChainFK(offsets, data.joint_states);
-      //std::cout << chain[j]->getName() <<std::endl;
+
       for (size_t i = 0; i < points.size(); ++i)
       {
         KDL::Frame p(KDL::Frame::Identity());
@@ -455,74 +323,17 @@ std::vector<geometry_msgs::PointStamped> MultiChainModel::project(
         points[i].point.x = p.p.x();
         points[i].point.y = p.p.y();
         points[i].point.z = p.p.z();
-      } 
+      }
     }
   }
 
   return points;
 }
 
-/*
-
-  // Resize to match # of features
-  points.resize(data.observations[sensor_idx].features.size());
- 
-  
-  KDL::Frame fk = getChainFK(offsets, data.joint_states);
-
-  for (size_t i = 0; i < points.size(); ++i)
-  {
-    points[i].header.frame_id = "base_link";
-
-    KDL::Frame p(KDL::Frame::Identity());
-    p.p.x(data.observations[sensor_idx].features[i].point.x);
-    p.p.y(data.observations[sensor_idx].features[i].point.y);
-    p.p.z(data.observations[sensor_idx].features[i].point.z);
-
-    // if there is a frame attached to the tip-- basically for checkerboard
-    if (data.observations[sensor_idx].features[i].header.frame_id != tip_)
-    {
-      KDL::Frame p2(KDL::Frame::Identity());
-      if (offsets.getFrame(data.observations[sensor_idx].features[i].header.frame_id, p2))
-      {
-        p = p2 * p;
-      }
-    } 
-
-    p = fk * p;
-
-    points[i].point.x = p.p.x();
-    points[i].point.y = p.p.y();
-    points[i].point.z = p.p.z();
-  }
-
-  KDL::Frame fk1 = getChainFK(offsets, data.joint_states);
-
-  for (size_t i = 0; i < points.size(); ++i)
-  {
-    KDL::Frame p(KDL::Frame::Identity());
-    p.p.x(points[i].point.x);
-    p.p.y(points[i].point.y);
-    p.p.z(points[i].point.z);
-
-    fk = fk1.Inverse();
-    p = fk * p;
-
-    points[i].header.frame_id = "head_camera_rgb_optical_frame";
-    points[i].point.x = p.p.x();
-    points[i].point.y = p.p.y();
-    points[i].point.z = p.p.z();
-  }
-
-  return points;
-}
-*/
-
 Camera2dModel::Camera2dModel(const std::string& name, KDL::Tree model, std::string root, std::string tip, bool inv) :
-  Model(name, model, root, tip, inv)
+    Model(name, model, root, tip, inv)
 {
   // TODO add additional parameters for unprojecting observations using initial parameters
-  // 
 }
 
 std::vector<geometry_msgs::PointStamped> Camera2dModel::project_(
@@ -587,7 +398,7 @@ std::vector<geometry_msgs::PointStamped> Camera2dModel::project_(
   points.resize(data.observations[sensor_idx].features.size());
 
   // Get position of camera frame
- // KDL::Frame fk = getChainFK(offsets, data.joint_states);
+  // KDL::Frame fk = getChainFK(offsets, data.joint_states);
 
   for (size_t i = 0; i < points.size(); ++i)
   {
@@ -618,9 +429,9 @@ KDL::Rotation rotation_from_axis_magnitude(const double x, const double y, const
     return KDL::Rotation::Quaternion(0.0, 0.0, 0.0, 1.0);
 
   return KDL::Rotation::Quaternion(x/magnitude * sin(magnitude/2.0),
-                                   y/magnitude * sin(magnitude/2.0),
-                                   z/magnitude * sin(magnitude/2.0),
-                                   cos(magnitude/2.0));
+      y/magnitude * sin(magnitude/2.0),
+      z/magnitude * sin(magnitude/2.0),
+      cos(magnitude/2.0));
 }
 
 void axis_magnitude_from_rotation(const KDL::Rotation& r, double& x, double& y, double& z)

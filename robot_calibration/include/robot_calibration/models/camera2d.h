@@ -46,11 +46,10 @@ public:
    */
   std::vector<geometry_msgs::PointStamped> project(
     const robot_calibration_msgs::CalibrationData& data,
-    const CalibrationOffsetParser& offsets)  {};  
-
+    const CalibrationOffsetParser& offsets) {};
 
   std::vector<geometry_msgs::PointStamped> project_(
-    const robot_calibration_msgs::CalibrationData& data, 
+    const robot_calibration_msgs::CalibrationData& data,
     std::vector<geometry_msgs::PointStamped> arm_pts,
     const CalibrationOffsetParser& offsets);
 };

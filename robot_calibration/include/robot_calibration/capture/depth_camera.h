@@ -37,20 +37,12 @@ public:
 
   bool init(ros::NodeHandle& n)
   {
-    camera_info_subscriber_ = n.subscribe("/head_camera/depth/camera_info",
+    std::string topic_name = n.getNamespace() +"/camera_info";
+
+    camera_info_subscriber_ = n.subscribe(topic_name,
                                           1,
                                           &DepthCameraInfoManager::cameraInfoCallback,
                                           this);
-
-    // Get parameters of drivers
-    if (!n.getParam("/head_camera/driver/z_offset_mm", z_offset_mm_) ||
-        !n.getParam("/head_camera/driver/z_scaling", z_scaling_))
-    {
-      ROS_FATAL("/head_camera/driver is not set, are drivers running?");
-      return false;
-    }
-
-    // TODO: should we warn about any particular configurations of offset/scaling?
 
     // Wait for camera_info
     int count = 25;
@@ -92,8 +84,8 @@ private:
 
   sensor_msgs::CameraInfo::Ptr camera_info_ptr_;
 
-  double z_offset_mm_;
-  double z_scaling_;
+  double z_offset_mm_ = 0;
+  double z_scaling_ = 1;
 };
 
 }  // namespace robot_calibration

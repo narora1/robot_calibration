@@ -28,6 +28,7 @@
 #include <robot_calibration/calibration_offset_parser.h>
 #include <robot_calibration/ceres/camera3d_to_arm_error.h>
 #include <robot_calibration/ceres/ground_plane_error.h>
+#include <robot_calibration/ceres/freight_ground_error.h>
 #include <robot_calibration/ceres/data_functions.h>
 #include <robot_calibration/ceres/outrageous_error.h>
 #include <robot_calibration/models/camera3d.h>
@@ -213,6 +214,56 @@ int Optimizer::optimize(OptimizationParams& params,
           }
         }
         
+        if(index == -1)
+        {
+          std::cerr << "Sensor name doesn't exist" << std::endl;
+          return 0;
+        }
+
+        if (progress_to_stdout)
+        {
+          double ** params = new double*[1];
+          params[0] = free_params;
+          double * residuals = new double[data[i].observations[index].features.size()];
+
+          cost->Evaluate(params, residuals, NULL);
+
+          std::cout << std::endl << "  z: ";
+          for (size_t k = 0; k < data[i].observations[index].features.size(); ++k)
+            std::cout << "  " << std::setw(10) << std::fixed << residuals[(k)];
+          std::cout << std::endl << std::endl;
+        }
+
+        problem->AddResidualBlock(cost,
+                                  NULL /* squared loss */,
+                                  free_params);
+      }
+      else if (params.error_blocks[j].type =="basecamera_to_ground")
+      {
+
+        std::string camera_name = static_cast<std::string>(params.error_blocks[j].params["camera"]);
+        std::string ground_name = static_cast<std::string>(params.error_blocks[j].params["ground"]);
+
+        // Check that this sample has the required features/observations
+        if (!hasSensor(data[i], camera_name) || !hasSensor(data[i], ground_name))
+          continue;
+
+        // Create the block
+        ceres::CostFunction * cost = FreightGroundError::Create(
+          dynamic_cast<Camera3dModel*>(models_[camera_name]),
+          z_,
+          offsets_.get(), data[i]);
+         
+        int index = -1;
+        for (size_t k =0; k < data[i].observations.size() ; k++)
+        {
+          if ( data[i].observations[k].sensor_name == camera_name)
+          {
+            index = k;
+            break;
+          }
+        }
+
         if(index == -1)
         {
           std::cerr << "Sensor name doesn't exist" << std::endl;

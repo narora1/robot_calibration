@@ -76,7 +76,8 @@ add_library(robot_calibration src/calibration_offset_parser.cpp
                               src/checkerboard_finder.cpp
                               src/feature_finder.cpp
                               src/led_finder.cpp
-                              src/ground_plane_finder.cpp	
+                              src/ground_plane_finder.cpp
+                              src/freight_ground_finder.cpp
                               src/models.cpp
                               src/optimization_params.cpp
                               src/optimizer.cpp)

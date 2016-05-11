@@ -39,33 +39,38 @@ ChainManager::ChainManager(ros::NodeHandle& nh, double wait_time)
   for (int i = 0; i < chains.size(); ++i)
   {
     std::string name, topic, group;
+    bool has_controller;
     name = static_cast<std::string>(chains[i]["name"]);
     topic = static_cast<std::string>(chains[i]["topic"]);
     group = static_cast<std::string>(chains[i]["planning_group"]);
+    has_controller = static_cast<bool>(chains[i]["has_controller"]);
 
-    boost::shared_ptr<ChainController> controller(new ChainController(name, topic, group));
-
-    for (int j = 0; j < chains[i]["joints"].size(); ++j)
+    if (has_controller == true)
     {
-      controller->joint_names.push_back(static_cast<std::string>(chains[i]["joints"][j]));
-    }
+      boost::shared_ptr<ChainController> controller(new ChainController(name, topic, group));
 
-    ROS_INFO("Waiting for %s...", topic.c_str());
-    if (!controller->client.waitForServer(ros::Duration(wait_time)))
-    {
-      ROS_WARN("Failed to connect to %s", topic.c_str());
-    }
-
-    if (controller->shouldPlan() && (!move_group_))
-    {
-      move_group_.reset(new MoveGroupClient("move_group", true));
-      if (!move_group_->waitForServer(ros::Duration(wait_time)))
+      for (int j = 0; j < chains[i]["joints"].size(); ++j)
       {
-        ROS_WARN("Failed to connect to move_group");
+        controller->joint_names.push_back(static_cast<std::string>(chains[i]["joints"][j]));
       }
-    }
 
-    controllers_.push_back(controller);
+      ROS_INFO("Waiting for %s...", topic.c_str());
+      if (!controller->client.waitForServer(ros::Duration(wait_time)))
+      {
+        ROS_WARN("Failed to connect to %s", topic.c_str());
+      }
+
+      if (controller->shouldPlan() && (!move_group_))
+      {
+        move_group_.reset(new MoveGroupClient("move_group", true));
+        if (!move_group_->waitForServer(ros::Duration(wait_time)))
+        {
+          ROS_WARN("Failed to connect to move_group");
+        }
+      }
+
+      controllers_.push_back(controller);
+    }
   }
 
   // Parameter to set movement time
@@ -152,7 +157,7 @@ bool ChainManager::moveToState(const sensor_msgs::JointState& state)
   double max_duration = duration_;
 
   // Split into different controllers
-  for(size_t i = 0; i < controllers_.size(); ++i)
+  for (size_t i = 0; i < controllers_.size(); ++i)
   {
     control_msgs::FollowJointTrajectoryGoal goal;
     goal.trajectory.joint_names = controllers_[i]->joint_names;

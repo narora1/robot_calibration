@@ -37,8 +37,9 @@ public:
 
   bool init(ros::NodeHandle& n)
   {
-    std::string topic_name = n.getNamespace() +"/camera_info";
-
+    std::string topic_name;
+    n.param<std::string>("camerainfo", topic_name, "/camera_info");
+    
     camera_info_subscriber_ = n.subscribe(topic_name,
                                           1,
                                           &DepthCameraInfoManager::cameraInfoCallback,
@@ -48,9 +49,6 @@ public:
         !n.getParam("/head_camera/driver/z_scaling", z_scaling_))
     {
       ROS_ERROR("/head_camera/driver is not set, are drivers running?");
-    }
-    else
-    {
       z_offset_mm_ = 0;
       z_scaling_ = 1;
     }
@@ -94,8 +92,8 @@ private:
 
   sensor_msgs::CameraInfo::Ptr camera_info_ptr_;
 
-  double z_offset_mm_ = 0;
-  double z_scaling_ = 1;
+  double z_offset_mm_;
+  double z_scaling_;
 };
 
 }  // namespace robot_calibration

@@ -107,7 +107,7 @@ bool GroundPlaneFinder::find(robot_calibration_msgs::CalibrationData * msg)
     if (!std::isfinite(p.x) || !std::isfinite(p.y) || !std::isfinite(p.z))
       continue;
 
-    if(p.z >max_z_)
+    if(p.z >max_z_ && max_z_ != 0)
       continue;
     (iter + j)[X] = (xyz + i)[X];
     (iter + j)[Y] = (xyz + i)[Y];
@@ -147,7 +147,7 @@ bool GroundPlaneFinder::find(robot_calibration_msgs::CalibrationData * msg)
   size_t step = cloud_.width/(points_total); 
   size_t k = 0;
 
-  for (size_t i = step; i < cloud_.width && k<points_total; i +=step)
+  for (size_t i = step; i < cloud_.width && k < points_total; i +=step)
   {
     points[k].x = i;
     k++;

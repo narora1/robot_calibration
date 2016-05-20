@@ -44,6 +44,16 @@ public:
                                           &DepthCameraInfoManager::cameraInfoCallback,
                                           this);
 
+    if (!n.getParam("/head_camera/driver/z_offset_mm", z_offset_mm_) ||
+        !n.getParam("/head_camera/driver/z_scaling", z_scaling_))
+    {
+      ROS_ERROR("/head_camera/driver is not set, are drivers running?");
+    }
+    else
+    {
+      z_offset_mm_ = 0;
+      z_scaling_ = 1;
+    }
     // Wait for camera_info
     int count = 25;
     while (--count)

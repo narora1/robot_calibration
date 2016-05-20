@@ -39,13 +39,14 @@ ChainManager::ChainManager(ros::NodeHandle& nh, double wait_time)
   for (int i = 0; i < chains.size(); ++i)
   {
     std::string name, topic, group;
+    bool has_controller;
     name = static_cast<std::string>(chains[i]["name"]);
+    topic = static_cast<std::string>(chains[i]["topic"]);
     group = static_cast<std::string>(chains[i]["planning_group"]);
-    
-    if (chains[i].hasMember("topic"))
+    has_controller = static_cast<bool>(chains[i]["has_controller"]);
+
+    if (has_controller == true)
     {
-      topic = static_cast<std::string>(chains[i]["topic"]);
- 
       boost::shared_ptr<ChainController> controller(new ChainController(name, topic, group));
 
       for (int j = 0; j < chains[i]["joints"].size(); ++j)

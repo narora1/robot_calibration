@@ -39,8 +39,6 @@ GroundPlaneFinder::GroundPlaneFinder(ros::NodeHandle & nh) :
 
   nh.param<std::string>("camera_sensor_name", camera_sensor_name_, "cameraground");
   nh.param<std::string>("chain_sensor_name", chain_sensor_name_, "ground");
-  nh.param<double>("points_max", points_max_, 60);
-  nh.param<double>("max_z", max_z_, 0);
 
   publisher_ = nh.advertise<sensor_msgs::PointCloud2>("ground_plane_points", 10);
   if (!depth_camera_manager_.init(nh))
@@ -106,9 +104,6 @@ bool GroundPlaneFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
     if (!std::isfinite(p.x) || !std::isfinite(p.y) || !std::isfinite(p.z))
       continue;
-
-    if(p.z >max_z_ && max_z_ != 0)
-      continue;
     (iter + j)[X] = (xyz + i)[X];
     (iter + j)[Y] = (xyz + i)[Y];
     (iter + j)[Z] = (xyz + i)[Z];
@@ -119,7 +114,8 @@ bool GroundPlaneFinder::find(robot_calibration_msgs::CalibrationData * msg)
   cloud_.width  = j;
   cloud_.data.resize(cloud_.width * cloud_.point_step);
 
-  int points_total = std::min(static_cast<size_t>(points_max_), j); 
+  int points_total = 60;
+
   std::vector<cv::Point2f> points;
   points.resize(points_total);
 
@@ -144,10 +140,10 @@ bool GroundPlaneFinder::find(robot_calibration_msgs::CalibrationData * msg)
   msg->observations[idx_cam].features.resize(points_total);
   msg->observations[idx_chain].features.resize(points_total);
 
-  size_t step = cloud_.width/(points_total); 
+  size_t step = cloud_.width/(points_total);
   size_t k = 0;
 
-  for (size_t i = step; i < cloud_.width && k < points_total; i +=step)
+  for (size_t i = step; i < cloud_.width; i +=step)
   {
     points[k].x = i;
     k++;

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ROBOT_CALIBRATION_CAPTURE_GROUND_PLANE_FINDER_H
-#define ROBOT_CALIBRATION_CAPTURE_GROUND_PLANE_FINDER_H
+#ifndef ROBOT_CALIBRATION_CAPTURE_FREIGHT_GROUND_FINDER_H
+#define ROBOT_CALIBRATION_CAPTURE_FREIGHT_GROUND_FINDER_H
 
 #include <ros/ros.h>
 #include <robot_calibration/capture/depth_camera.h>
@@ -26,10 +26,10 @@
 namespace robot_calibration
 {
 
-class GroundPlaneFinder : public FeatureFinder
+class FreightGroundFinder : public FeatureFinder
 {
 public:
-  GroundPlaneFinder(ros::NodeHandle & n);
+  FreightGroundFinder(ros::NodeHandle & n);
 
   bool find(robot_calibration_msgs::CalibrationData * msg);
 
@@ -46,10 +46,8 @@ private:
 
   std::string camera_sensor_name_;
   std::string chain_sensor_name_;
-  double points_max_;
-  double max_z_;
 };
 
 }  // namespace robot_calibration
 
-#endif  // ROBOT_CALIBRATION_CAPTURE_GROUND_PLANE_FINDER_H
+#endif  // ROBOT_CALIBRATION_CAPTURE_FREIGHT_GROUND_FINDER_H

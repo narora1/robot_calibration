@@ -46,6 +46,8 @@ private:
 
   std::string camera_sensor_name_;
   std::string chain_sensor_name_;
+  double points_max_;
+  double max_z_;
 };
 
 }  // namespace robot_calibration

@@ -37,7 +37,7 @@ public:
 
   bool init(ros::NodeHandle& n)
   {
-    camera_info_subscriber_ = n.subscribe("/base_camera/depth_downsample/camera_info",
+    camera_info_subscriber_ = n.subscribe("/camera/camera_info",
                                           1,
                                           &DepthCameraInfoManager::cameraInfoCallback,
                                           this);
@@ -65,7 +65,7 @@ public:
     }
 
     ROS_WARN("CameraInfo receive timed out.");
-    return false;
+    return true;//false;
   }
 
   robot_calibration_msgs::ExtendedCameraInfo getDepthCameraInfo()

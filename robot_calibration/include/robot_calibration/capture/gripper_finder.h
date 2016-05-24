@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ROBOT_CALIBRATION_CAPTURE_GRIPPER_DEPTH_FINDER_H
-#define ROBOT_CALIBRATION_CAPTURE_GRIPPER_DEPTH_FINDER_H
+#ifndef ROBOT_CALIBRATION_CAPTURE_GRIPPER_FINDER_H
+#define ROBOT_CALIBRATION_CAPTURE_GRIPPER_FINDER_H
 
 #include <ros/ros.h>
 #include <robot_calibration/capture/depth_camera.h>
@@ -30,13 +30,14 @@
 #include <robot_calibration_msgs/GripperLedCommandAction.h>
 #include <actionlib/client/simple_action_client.h>
 
+
 namespace robot_calibration
 {
 
-class GripperDepthFinder : public FeatureFinder
+class GripperFinder : public FeatureFinder
 {
 public:
-  GripperDepthFinder(ros::NodeHandle & n);
+  GripperFinder(ros::NodeHandle & n);
 
   bool find(robot_calibration_msgs::CalibrationData * msg);
 
@@ -48,7 +49,8 @@ private:
   ros::Subscriber subscriber_;
   ros::Subscriber camera_info_sub_;
   ros::Publisher publisher_;
-
+  ros::Publisher image_pub_cluster_;
+  ros::Publisher image_pub_gripper_cluster_;
   bool waiting_;
   sensor_msgs::ImageConstPtr image_;
   DepthCameraInfoManager depth_camera_manager_;
@@ -62,5 +64,5 @@ private:
 
 }  // namespace robot_calibration
 
-#endif  // ROBOT_CALIBRATION_CAPTURE_GRIPPER_DEPTH_FINDER_H
+#endif  // ROBOT_CALIBRATION_CAPTURE_GRIPPER_FINDER_H
 

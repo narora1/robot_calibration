@@ -28,7 +28,7 @@
 #include <robot_calibration/calibration_offset_parser.h>
 #include <robot_calibration/ceres/camera3d_to_arm_error.h>
 #include <robot_calibration/ceres/ground_plane_error.h>
-#include <robot_calibration/ceres/gripper_depth_error.h>
+#include <robot_calibration/ceres/gripper_error.h>
 #include <robot_calibration/ceres/gripper_color_error.h>
 #include <robot_calibration/ceres/data_functions.h>
 #include <robot_calibration/ceres/outrageous_error.h>
@@ -259,7 +259,7 @@ int Optimizer::optimize(OptimizationParams& params,
         }
 
         // Create the block
-        ceres::CostFunction * cost = GripperDepthError::Create(
+        ceres::CostFunction * cost = GripperError::Create(
             dynamic_cast<Camera3dModel*>(models_[camera_name]),
             models_[gripper_name],
             offsets_.get(), data[i]);

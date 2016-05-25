@@ -179,7 +179,7 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
         seed_index++; 
       }
 
-      if (seed_q.size () >= 1000 && seed_q.size () <= 50000)
+      if (seed_q.size () >= 10 && seed_q.size () <= 5000000)
       {
         clusters.push_back(seed_q );
       }
@@ -257,9 +257,11 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
   ros::Time time = ros::Time(0);
   try
   {
-    listener.waitForTransform( "/head_camera_depth_optical_frame" /*image_->header.frame_id*/, gripper_centroid.frame_id_,
+
+   // std::cout << image_->header.frame_id << std::endl;
+    listener.waitForTransform( "/camera_optical_link" /*image_->header.frame_id*/, gripper_centroid.frame_id_,
         time, ros::Duration(3.0));
-    listener.transformPoint(  "/head_camera_depth_optical_frame"/*image_->header.frame_id*/,
+    listener.transformPoint(  "/camera_optical_link"/*image_->header.frame_id*/,
         time,  gripper_centroid , gripper_centroid.frame_id_, gripper_centroid_transformed);
   }
   catch (tf::TransformException ex)
@@ -315,10 +317,10 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
       point.setZ( points_on_plane.at<cv::Vec3f>(i,0)[2]);
       tf::Stamped<tf::Point> point_transformed;
       //    ros::Time time;
-      listener.waitForTransform(  "/camera_optical_frame"/*image_->header.frame_id*/, point.frame_id_,
+      listener.waitForTransform(  "/camera_optical_link"/*image_->header.frame_id*/, point.frame_id_,
           time, ros::Duration(3.0));
 
-      listener.transformPoint(  "/camera_optical_frame",
+      listener.transformPoint(  "/camera_optical_link",
           time,  point , point.frame_id_, point_transformed);
 
       cv::Vec3f point_transform;

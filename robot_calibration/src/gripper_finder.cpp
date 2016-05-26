@@ -103,7 +103,7 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
    try
   {
-    cv_ptr = cv_bridge::toCvCopy(image_, "16SC3");
+    cv_ptr = cv_bridge::toCvCopy(image_, "32FC3");
 
   }
   catch (cv_bridge::Exception& e)
@@ -165,7 +165,10 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
               continue;
 
             cv::Vec3f current = cv_ptr->image.at<cv::Vec3f>(m,n);
-            cv::Vec3f neighbour = cv_ptr->image.at<cv::Vec3f>(m+x,n+y);          
+            cv::Vec3f neighbour = cv_ptr->image.at<cv::Vec3f>(m+x,n+y);         
+            //std::cout << "current" << cv_ptr->image.at<cv::Vec3f>(m,n)[0] << std::endl;
+            //std::cout << "neightbour" << cv_ptr->image.at<cv::Vec3f>(m+x,n+y)[0] << std::endl;
+ 
             float distance =  std::sqrt( pow((current.val[0] - neighbour.val[0]),2) + pow((current.val[1] - neighbour.val[1]),2) + pow((current.val[2] - neighbour.val[2]),2));
             
             // if the pixels belong to the same bin then add them to the queue
@@ -179,9 +182,10 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
         seed_index++; 
       }
 
-      if (seed_q.size () >= 10 && seed_q.size () <= 5000000)
+      if (seed_q.size () >= 30 && seed_q.size () <= 5000)
       {
         clusters.push_back(seed_q );
+        std::cout << "once" << seed_q.size() << std::endl;
       }
     }
   }
@@ -213,6 +217,7 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
 
   cv::Mat channels[3];
   cv::split(cv_ptr->image, channels);
+std::cout << "cluster size " << clusters.size() << std::endl;
 
 
   cv::Mat centroids;
@@ -220,6 +225,7 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
   // calculate centroids for all the clusters
   for(size_t i = 0 ; i < clusters.size(); i++)
   {
+    std::cout << "cluster size " << clusters.size() << std::endl;
     int count = 0;
     double x = 0;
     double y = 0;
@@ -242,9 +248,10 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
     }
 
     cv::Vec3f centroid_point(x/count, y/count, z/count);
-
+    std::cout << "centroid_point" << " " << x/count << " " << y/count << " " << z/count << std::endl;
     centroids.push_back(centroid_point);
   }
+  std::cout << "here" << std::endl;
 
   // the expected gripper centroid transformed to the camera frame
   tf::Stamped<tf::Point> gripper_centroid;
@@ -274,6 +281,7 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
   gripper_centroid_transform[0] = gripper_centroid_transformed.x();
   gripper_centroid_transform[1] = gripper_centroid_transformed.y();
   gripper_centroid_transform[2] = gripper_centroid_transformed.z();
+  std::cout << "gripper_centroid_transform" << gripper_centroid_transform[0] << " " << gripper_centroid_transform[1] << " " << gripper_centroid_transform[2] << std::endl;
 
   cv::Vec3f point_on_plane_1( 0, -0.0625, 0.0396);
   cv::Vec3f point_on_plane_2( 0, 0.0625, 0.0396);
@@ -355,15 +363,15 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
   std::cout << plane_transformed[0] << "\t" << plane_transformed[1] << "\t" << plane_transformed[2] << "\t" << plane_transformed[3] << std::endl;
 
   // find the closest cluster centroid to the gripper centroid
-  float min_distance = 1000;
-  int closest_centroid= 1000;
+  float min_distance = 100;
+  int closest_centroid= 100;
 
   for( size_t i = 0; i < centroids.rows; i++)
   {
-    float distance = pow((gripper_centroid_transform[0]-centroids.at<cv::Vec3f>(i,0)[0]) ,2) +
-      pow((gripper_centroid_transform[1]-centroids.at<cv::Vec3f>(i,0)[1]) ,2) +
-      pow((gripper_centroid_transform[2]-centroids.at<cv::Vec3f>(i,0)[2]) ,2);
-
+    float distance = pow((gripper_centroid_transform[0] + centroids.at<cv::Vec3f>(i,0)[1]/1000) ,2) +
+      pow((gripper_centroid_transform[1] + centroids.at<cv::Vec3f>(i,0)[2]/1000) ,2) +
+      pow((gripper_centroid_transform[2]-centroids.at<cv::Vec3f>(i,0)[0]/1000) ,2);
+    std::cout << "distance" << distance << std::endl; 
     distance = sqrt(distance);
     if (distance < min_distance)
     {
@@ -380,6 +388,8 @@ bool GripperFinder::find(robot_calibration_msgs::CalibrationData * msg)
   cv::Mat some_2 = cv::Mat::zeros( cv_ptr->image.size(), CV_32FC1);
   cv::Mat some_3 = cv::Mat::zeros( cv_ptr->image.size(), CV_32FC1);
 
+
+  std::cout << closest_centroid << std::endl;
   //display the closest cluster
   for (size_t j = 0; j < clusters[closest_centroid].size(); j++)
   {

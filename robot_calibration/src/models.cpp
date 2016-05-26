@@ -42,6 +42,8 @@ ChainModel::ChainModel(const std::string& name, KDL::Tree model, std::string roo
     root_(root), tip_(tip), name_(name)
 {
   // Create a KDL::Chain
+  std::cout << root << std::endl;
+std::cout << tip << std::endl;
   if (!model.getChain(root, tip, chain_))
     std::cerr << "Failed to get chain" << std::endl;
   if (!model.getChain(root, "head_camera_rgb_optical_frame", chaincam_))

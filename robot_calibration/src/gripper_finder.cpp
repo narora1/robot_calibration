@@ -389,7 +389,7 @@ std::cout << "cluster size " << clusters.size() << std::endl;
   cv::Mat some_3 = cv::Mat::zeros( cv_ptr->image.size(), CV_32FC1);
 
 
-  std::cout << closest_centroid << std::endl;
+  std::cout << " closest centroid" << closest_centroid << " " << min_distance <<std::endl;
   //display the closest cluster
   for (size_t j = 0; j < clusters[closest_centroid].size(); j++)
   {

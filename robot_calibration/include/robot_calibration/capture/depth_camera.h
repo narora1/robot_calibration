@@ -37,16 +37,16 @@ public:
 
   bool init(ros::NodeHandle& n)
   {
-    camera_info_subscriber_ = n.subscribe("/head_camera/depth/camera_info",
+    camera_info_subscriber_ = n.subscribe("/camera/depth/camera_info",
                                           1,
                                           &DepthCameraInfoManager::cameraInfoCallback,
                                           this);
 
     // Get parameters of drivers
-    if (!n.getParam("/head_camera/driver/z_offset_mm", z_offset_mm_) ||
-        !n.getParam("/head_camera/driver/z_scaling", z_scaling_))
+    if (!n.getParam("/camera/driver/z_offset_mm", z_offset_mm_) ||
+        !n.getParam("/camera/driver/z_scaling", z_scaling_))
     {
-      ROS_FATAL("/head_camera/driver is not set, are drivers running?");
+      ROS_FATAL("/camera/driver is not set, are drivers running?");
       return false;
     }
 
